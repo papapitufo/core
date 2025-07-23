@@ -29,11 +29,28 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/actuator/**").permitAll()  // Allow public access to actuator endpoints
+                .requestMatchers("/login", "/signup", "/css/**", "/js/**", "/images/**").permitAll()  // Allow public access to login, signup and static resources
+                .requestMatchers("/api/**").authenticated()  // Require authentication for API endpoints
                 .anyRequest().authenticated()  // Require authentication for all other requests
             )
             .userDetailsService(userDetailsService)  // Use custom user details service
-            .httpBasic(httpBasic -> {})  // Enable basic authentication
-            .csrf(csrf -> csrf.disable());  // Disable CSRF for API endpoints (not recommended for production)
+            .formLogin(form -> form
+                .loginPage("/login")  // Custom login page
+                .defaultSuccessUrl("/dashboard", true)  // Redirect to dashboard after successful login
+                .failureUrl("/login?error=true")  // Redirect to login page with error parameter on failure
+                .permitAll()
+            )
+            .logout(logout -> logout
+                .logoutUrl("/logout")  // Logout URL
+                .logoutSuccessUrl("/login?logout=true")  // Redirect to login page with logout parameter
+                .invalidateHttpSession(true)  // Invalidate session
+                .deleteCookies("JSESSIONID")  // Delete session cookie
+                .permitAll()
+            )
+            .httpBasic(httpBasic -> {})  // Enable basic authentication for API endpoints
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers("/api/**")  // Disable CSRF for API endpoints only
+            );
         
         return http.build();
     }

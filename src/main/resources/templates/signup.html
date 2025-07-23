@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Core Application</title>
+    
+    <!-- Material UI CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Custom CSS for Material UI-like styling -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #212121;
+            padding: 20px 0;
+        }
+        
+        .signup-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+        
+        .signup-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            padding: 40px 32px;
+            text-align: center;
+        }
+        
+        .signup-header {
+            margin-bottom: 32px;
+        }
+        
+        .signup-title {
+            font-size: 2rem;
+            font-weight: 500;
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+        
+        .signup-subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .form-field {
+            margin-bottom: 24px;
+            position: relative;
+            text-align: left;
+        }
+        
+        .text-field {
+            width: 100%;
+            padding: 16px 12px 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Roboto', sans-serif;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .text-field:focus {
+            outline: none;
+            border-color: #1976d2;
+            border-width: 2px;
+            box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+        }
+        
+        .text-field.error {
+            border-color: #c62828;
+        }
+        
+        .text-field-label {
+            position: absolute;
+            left: 12px;
+            top: 16px;
+            color: #666;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            background: white;
+            padding: 0 4px;
+        }
+        
+        .text-field:focus + .text-field-label,
+        .text-field:not(:placeholder-shown) + .text-field-label {
+            top: -8px;
+            font-size: 12px;
+            color: #1976d2;
+        }
+        
+        .error-message {
+            color: #c62828;
+            font-size: 12px;
+            margin-top: 4px;
+            display: block;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Roboto', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-primary {
+            background-color: #1976d2;
+            color: white;
+            margin-bottom: 16px;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1565c0;
+            box-shadow: 0 4px 16px rgba(25, 118, 210, 0.3);
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            color: #1976d2;
+            border: 1px solid #1976d2;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            text-align: left;
+        }
+        
+        .alert-error {
+            background-color: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #c62828;
+        }
+        
+        .alert-success {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+            border-left: 4px solid #2e7d32;
+        }
+        
+        .material-icons {
+            margin-right: 8px;
+            font-size: 20px;
+        }
+        
+        .divider {
+            margin: 24px 0;
+            text-align: center;
+            position: relative;
+        }
+        
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #ddd;
+        }
+        
+        .divider span {
+            background: white;
+            padding: 0 16px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .link {
+            color: #1976d2;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="signup-card">
+            <div class="signup-header">
+                <h1 class="signup-title">Create Account</h1>
+                <p class="signup-subtitle">Join us and get started today</p>
+            </div>
+            
+            <!-- Error Messages -->
+            <div th:if="${error}" class="alert alert-error">
+                <span class="material-icons">error</span>
+                <span th:text="${error}">An error occurred</span>
+            </div>
+            
+            <!-- Success Messages -->
+            <div th:if="${success}" class="alert alert-success">
+                <span class="material-icons">check_circle</span>
+                <span th:text="${success}">Account created successfully</span>
+            </div>
+            
+            <!-- Signup Form -->
+            <form th:action="@{/signup}" method="post" th:object="${createUserRequest}">
+                <div class="form-field">
+                    <input type="text" 
+                           id="username" 
+                           th:field="*{username}"
+                           class="text-field" 
+                           th:classappend="${#fields.hasErrors('username')} ? 'error' : ''"
+                           placeholder=" "
+                           required>
+                    <label for="username" class="text-field-label">Username</label>
+                    <span th:if="${#fields.hasErrors('username')}" 
+                          th:errors="*{username}" 
+                          class="error-message"></span>
+                </div>
+                
+                <div class="form-field">
+                    <input type="email" 
+                           id="email" 
+                           th:field="*{email}"
+                           class="text-field" 
+                           th:classappend="${#fields.hasErrors('email')} ? 'error' : ''"
+                           placeholder=" "
+                           required>
+                    <label for="email" class="text-field-label">Email Address</label>
+                    <span th:if="${#fields.hasErrors('email')}" 
+                          th:errors="*{email}" 
+                          class="error-message"></span>
+                </div>
+                
+                <div class="form-field">
+                    <input type="password" 
+                           id="password" 
+                           th:field="*{password}"
+                           class="text-field" 
+                           th:classappend="${#fields.hasErrors('password')} ? 'error' : ''"
+                           placeholder=" "
+                           required>
+                    <label for="password" class="text-field-label">Password</label>
+                    <span th:if="${#fields.hasErrors('password')}" 
+                          th:errors="*{password}" 
+                          class="error-message"></span>
+                </div>
+                
+                <div class="form-field">
+                    <input type="password" 
+                           id="confirmPassword" 
+                           name="confirmPassword"
+                           class="text-field" 
+                           placeholder=" "
+                           required>
+                    <label for="confirmPassword" class="text-field-label">Confirm Password</label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    Create Account
+                </button>
+            </form>
+            
+            <div class="divider">
+                <span>or</span>
+            </div>
+            
+            <a th:href="@{/login}" class="btn btn-secondary">
+                Sign In Instead
+            </a>
+        </div>
+    </div>
+</body>
+</html>
