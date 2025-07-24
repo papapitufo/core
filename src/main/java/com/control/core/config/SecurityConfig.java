@@ -29,7 +29,8 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/actuator/**").permitAll()  // Allow public access to actuator endpoints
-                .requestMatchers("/login", "/signup", "/css/**", "/js/**", "/images/**").permitAll()  // Allow public access to login, signup and static resources
+                .requestMatchers("/login", "/signup", "/forgot-password", "/reset-password", "/css/**", "/js/**", "/images/**").permitAll()  // Allow public access to login, signup, password reset and static resources
+                .requestMatchers("/admin/**").hasRole("ADMIN")  // Require ADMIN role for admin endpoints
                 .requestMatchers("/api/**").authenticated()  // Require authentication for API endpoints
                 .anyRequest().authenticated()  // Require authentication for all other requests
             )

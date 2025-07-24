@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <div th:fragment="userHistory">
+        <div style="margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: #e3f2fd; display: flex; align-items: center; justify-content: center;">
+                    <span class="material-icons" style="color: #1976d2; font-size: 24px;">person</span>
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-size: 1.1rem;" th:text="${user.username}">Username</h4>
+                    <p style="margin: 0; color: #666; font-size: 14px;" th:text="${user.email}">email@example.com</p>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; background: #f5f5f5; padding: 16px; border-radius: 8px;">
+                <div>
+                    <div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Role</div>
+                    <div style="font-weight: 500;" th:text="${user.role}">USER</div>
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Status</div>
+                    <div style="font-weight: 500;" th:text="${user.enabled} ? 'Active' : 'Inactive'">Active</div>
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Created</div>
+                    <div style="font-weight: 500;" th:text="${#temporals.format(user.createdAt, 'MMM dd, yyyy HH:mm')}">Jan 01, 2025 10:00</div>
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Last Login</div>
+                    <div style="font-weight: 500;" th:text="${user.lastLogin != null ? #temporals.format(user.lastLogin, 'MMM dd, yyyy HH:mm') : 'Never'}">Never</div>
+                </div>
+            </div>
+        </div>
+        
+        <h4 style="margin-bottom: 16px; color: #212121;">Activity Timeline</h4>
+        
+        <div style="position: relative; padding-left: 32px;">
+            <!-- Timeline line -->
+            <div style="position: absolute; left: 12px; top: 0; bottom: 0; width: 2px; background: #e0e0e0;"></div>
+            
+            <!-- Timeline items -->
+            <div class="timeline-item" style="position: relative; margin-bottom: 24px;">
+                <div style="position: absolute; left: -26px; top: 4px; width: 16px; height: 16px; border-radius: 50%; background: #2e7d32; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>
+                <div style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                        <div style="font-weight: 500;">Account Created</div>
+                        <div style="font-size: 12px; color: #666;" th:text="${#temporals.format(user.createdAt, 'MMM dd, yyyy HH:mm')}">Jan 01, 2025 10:00</div>
+                    </div>
+                    <div style="color: #666; font-size: 14px;">User account was created</div>
+                </div>
+            </div>
+            
+            <div class="timeline-item" th:if="${user.lastLogin != null}" style="position: relative; margin-bottom: 24px;">
+                <div style="position: absolute; left: -26px; top: 4px; width: 16px; height: 16px; border-radius: 50%; background: #1976d2; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>
+                <div style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                        <div style="font-weight: 500;">Last Login</div>
+                        <div style="font-size: 12px; color: #666;" th:text="${#temporals.format(user.lastLogin, 'MMM dd, yyyy HH:mm')}">Jan 01, 2025 10:00</div>
+                    </div>
+                    <div style="color: #666; font-size: 14px;">User logged into the system</div>
+                </div>
+            </div>
+            
+            <div class="timeline-item" th:unless="${user.enabled}" style="position: relative; margin-bottom: 24px;">
+                <div style="position: absolute; left: -26px; top: 4px; width: 16px; height: 16px; border-radius: 50%; background: #c62828; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>
+                <div style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                        <div style="font-weight: 500;">Account Deactivated</div>
+                        <div style="font-size: 12px; color: #666;">Recent</div>
+                    </div>
+                    <div style="color: #666; font-size: 14px;">User account was deactivated</div>
+                </div>
+            </div>
+            
+            <!-- Placeholder for more activities -->
+            <div class="timeline-item" style="position: relative; margin-bottom: 24px;">
+                <div style="position: absolute; left: -26px; top: 4px; width: 16px; height: 16px; border-radius: 50%; background: #f57c00; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>
+                <div style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                        <div style="font-weight: 500;">Profile Updated</div>
+                        <div style="font-size: 12px; color: #666;">System Generated</div>
+                    </div>
+                    <div style="color: #666; font-size: 14px;">User profile information was updated</div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; padding: 20px; color: #666; font-size: 14px;">
+            <span class="material-icons" style="font-size: 20px; vertical-align: middle; margin-right: 8px;">info</span>
+            Detailed activity logging will be implemented in future updates
+        </div>
+    </div>
+</body>
+</html>

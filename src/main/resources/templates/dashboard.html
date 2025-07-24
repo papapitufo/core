@@ -255,6 +255,19 @@
                 <a href="#" class="btn btn-primary">Manage Profile</a>
             </div>
             
+            <div class="card" sec:authorize="hasRole('ADMIN')">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <span class="material-icons">group</span>
+                    </div>
+                    <h3 class="card-title">User Management</h3>
+                </div>
+                <div class="card-content">
+                    Create, activate, deactivate users and manage user accounts. View user history and activity.
+                </div>
+                <a href="/admin/users" class="btn btn-primary">Manage Users</a>
+            </div>
+            
             <div class="card">
                 <div class="card-header">
                     <div class="card-icon">

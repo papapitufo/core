@@ -2,6 +2,7 @@ package com.control.core.controller;
 
 import com.control.core.dto.CreateUserRequest;
 import com.control.core.service.UserService;
+import com.control.core.service.PasswordResetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,6 +17,9 @@ public class WebController {
     
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private PasswordResetService passwordResetService;
     
     @GetMapping("/")
     public String index() {
@@ -75,5 +79,70 @@ public class WebController {
     @GetMapping("/dashboard")
     public String dashboard() {
         return "dashboard";
+    }
+    
+    @GetMapping("/forgot-password")
+    public String forgotPassword() {
+        return "forgot-password";
+    }
+    
+    @PostMapping("/forgot-password")
+    public String processForgotPassword(@RequestParam String email, Model model) {
+        try {
+            passwordResetService.sendPasswordResetEmail(email);
+            model.addAttribute("success", true);
+            return "forgot-password";
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+            return "forgot-password";
+        }
+    }
+    
+    @GetMapping("/reset-password")
+    public String resetPassword(@RequestParam String token, Model model) {
+        if (passwordResetService.isTokenValid(token)) {
+            model.addAttribute("token", token);
+            return "reset-password";
+        } else {
+            model.addAttribute("invalidToken", true);
+            return "reset-password";
+        }
+    }
+    
+    @PostMapping("/reset-password")
+    public String processResetPassword(@RequestParam String token,
+                                     @RequestParam String password,
+                                     @RequestParam String confirmPassword,
+                                     Model model) {
+        
+        // Validate token
+        if (!passwordResetService.isTokenValid(token)) {
+            model.addAttribute("invalidToken", true);
+            return "reset-password";
+        }
+        
+        // Validate passwords match
+        if (!password.equals(confirmPassword)) {
+            model.addAttribute("token", token);
+            model.addAttribute("error", "Passwords do not match");
+            return "reset-password";
+        }
+        
+        // Validate password length
+        if (password.length() < 6) {
+            model.addAttribute("token", token);
+            model.addAttribute("error", "Password must be at least 6 characters long");
+            return "reset-password";
+        }
+        
+        try {
+            passwordResetService.resetPassword(token, password);
+            model.addAttribute("success", true);
+            return "reset-password";
+        } catch (RuntimeException e) {
+            model.addAttribute("token", token);
+            model.addAttribute("error", e.getMessage());
+            return "reset-password";
+        }
     }
 }
