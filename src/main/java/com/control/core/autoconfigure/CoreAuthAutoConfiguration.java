@@ -3,6 +3,7 @@ package com.control.core.autoconfigure;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +18,9 @@ import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * Auto-configuration for Core Auth Starter
+ * 
+ * This auto-configuration provides default beans for authentication functionality
+ * but allows consuming applications to override any configuration as needed.
  */
 @AutoConfiguration
 @ConditionalOnClass({JpaRepository.class, UserDetailsService.class})
@@ -26,44 +30,62 @@ import org.springframework.security.web.SecurityFilterChain;
 @ComponentScan(basePackages = "com.control.core")
 public class CoreAuthAutoConfiguration {
 
+    /**
+     * Provides a default password encoder if none is defined
+     */
     @Bean
     @ConditionalOnMissingBean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Provides a default security filter chain ONLY if none is defined by the consuming application.
+     * This ensures that consuming applications can define their own security configuration
+     * without conflicts.
+     */
     @Bean
-    @ConditionalOnMissingBean
-    public SecurityFilterChain coreAuthSecurityFilterChain(HttpSecurity http, CoreAuthProperties properties) throws Exception {
+    @ConditionalOnMissingBean(SecurityFilterChain.class)
+    @ConditionalOnProperty(name = "core.auth.security.auto-configure", havingValue = "true", matchIfMissing = true)
+    public SecurityFilterChain coreAuthDefaultSecurityFilterChain(HttpSecurity http, CoreAuthProperties properties) throws Exception {
         return http
             .authorizeHttpRequests(auth -> {
-                auth.requestMatchers("/login", "/css/**", "/js/**", "/images/**").permitAll();
+                // Always allow static resources and login
+                auth.requestMatchers("/login", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll();
                 
+                // Conditionally allow registration
                 if (properties.isRegistrationEnabled()) {
                     auth.requestMatchers("/signup").permitAll();
                 }
                 
+                // Conditionally allow password reset
                 if (properties.isForgotPasswordEnabled()) {
                     auth.requestMatchers("/forgot-password", "/reset-password").permitAll();
                 }
                 
+                // Conditionally protect admin endpoints
                 if (properties.isAdminPanelEnabled()) {
                     auth.requestMatchers("/admin/**").hasRole("ADMIN");
                 }
                 
+                // Require authentication for everything else
                 auth.anyRequest().authenticated();
             })
             .formLogin(form -> form
                 .loginPage("/login")
                 .defaultSuccessUrl(properties.getDefaultSuccessUrl(), true)
+                .failureUrl("/login?error=true")
                 .permitAll()
             )
             .logout(logout -> logout
-                .logoutSuccessUrl("/login?logout")
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login?logout=true")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
                 .permitAll()
             )
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**") // Allow API endpoints to be called without CSRF
+                .ignoringRequestMatchers("/api/**") // Allow API endpoints to be called without CSRF if needed
             )
             .build();
     }

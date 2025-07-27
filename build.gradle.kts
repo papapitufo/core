@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.control"
-version = "1.0.1"
+version = "1.0.2"
 description = "Core Authentication and User Management Spring Boot Starter"
 
 java {
@@ -39,11 +39,6 @@ dependencies {
 	compileOnly("org.postgresql:postgresql")
 	compileOnly("com.h2database:h2")
 	compileOnly("org.springframework.boot:spring-boot-starter-actuator")
-	
-	// Remove OAuth2 dependencies as they're not core to basic auth
-	// implementation("org.springframework.boot:spring-boot-starter-hateoas")
-	// implementation("org.springframework.boot:spring-boot-starter-oauth2-authorization-server")
-	// implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 	
 	// Development and Test dependencies
 	compileOnly("org.springframework.boot:spring-boot-devtools")

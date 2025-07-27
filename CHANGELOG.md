@@ -5,6 +5,65 @@ All notable changes to the Core Auth Starter project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2025-07-27
+
+### 🔧 Fixed
+
+#### Security Configuration Conflicts
+- **Fixed SecurityFilterChain bean conflicts** when integrating with applications that have existing security configurations
+- **Removed conflicting SecurityConfig class** from the starter library that was causing bean definition override exceptions
+- **Enhanced auto-configuration** with proper conditional annotations to prevent conflicts
+
+#### Improved Compatibility
+- **Added @ConditionalOnMissingBean(SecurityFilterChain.class)** to ensure the starter's security configuration only applies when no existing configuration is present
+- **Added security auto-configuration toggle** via `core.auth.security.auto-configure` property
+- **Better integration patterns** for consuming applications with existing security setups
+
+#### Configuration Options
+- **New security configuration property**: `core.auth.security.auto-configure=true/false`
+- **Flexible security integration** allowing consuming applications to choose their security approach
+- **Multiple integration strategies** documented for different use cases
+
+### 📚 Documentation
+
+#### Enhanced Troubleshooting
+- **Added comprehensive troubleshooting section** for SecurityFilterChain conflicts
+- **Multiple resolution strategies** documented with clear examples
+- **Step-by-step guides** for different integration approaches
+
+#### Advanced Configuration Guide
+- **Custom security configuration examples** for different scenarios
+- **Security order and priority documentation** for multiple SecurityFilterChain beans
+- **Best practices** for integrating with existing Spring Security configurations
+
+### 🔧 Technical Improvements
+
+#### Auto-Configuration
+- **Better conditional bean creation** to prevent conflicts
+- **Enhanced property-based configuration** for fine-tuned control
+- **Improved Spring Boot compatibility** across different application types
+
+#### Security Architecture
+- **Cleaner separation** between library security defaults and application-specific security
+- **More flexible security configuration** allowing easier customization
+- **Better documentation** of security integration patterns
+
+### 🎯 Migration Guide
+
+If upgrading from 1.0.1 and experiencing security conflicts:
+
+1. **Option 1 - Disable Auto-Configuration (Recommended)**:
+   ```properties
+   core.auth.security.auto-configure=false
+   ```
+
+2. **Option 2 - Allow Bean Override**:
+   ```properties
+   spring.main.allow-bean-definition-overriding=true
+   ```
+
+3. **Option 3 - Remove Your Security Config**: Let Core Auth handle all security
+
 ## [1.0.1] - 2025-07-27
 
 ### 📚 Enhanced Documentation
