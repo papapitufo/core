@@ -5,6 +5,26 @@ All notable changes to the Core Auth Starter project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2025-07-27
+
+### 🔧 Fixed
+
+#### Security Configuration Override
+- **Fixed security configuration precedence** - removed `@ConditionalOnMissingBean(SecurityFilterChain.class)` to ensure starter's security config takes precedence
+- **Added `@Order(1)` annotation** to prioritize starter's security configuration over Spring Boot's default
+- **Added `@AutoConfigureBefore(SecurityAutoConfiguration.class)`** to ensure proper configuration order
+- **Named security bean** as `coreAuthSecurityFilterChain` to avoid conflicts
+- **Resolved default Spring login page issue** - consumers will now see the custom Material UI login page
+
+#### Spring Boot Version Compatibility
+- **Improved compatibility** with different Spring Boot versions (3.0.x and 3.5.x)
+- **Enhanced auto-configuration reliability** for security configurations
+- **Better handling of default SecurityFilterChain** beans in consumer applications
+
+### 📖 Documentation
+- **Updated troubleshooting guide** with security configuration override information
+- **Added version compatibility notes** for different Spring Boot versions
+
 ## [1.0.4] - 2025-07-27
 
 ### 🔧 Fixed

@@ -1,13 +1,16 @@
 package com.control.core.autoconfigure;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.core.annotation.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -23,6 +26,7 @@ import org.springframework.security.web.SecurityFilterChain;
  * but allows consuming applications to override any configuration as needed.
  */
 @AutoConfiguration
+@AutoConfigureBefore(SecurityAutoConfiguration.class)
 @ConditionalOnClass({JpaRepository.class, UserDetailsService.class})
 @EnableConfigurationProperties(CoreAuthProperties.class)
 @EnableJpaRepositories(basePackages = "com.control.core.repository")
@@ -40,12 +44,12 @@ public class CoreAuthAutoConfiguration {
     }
 
     /**
-     * Provides a default security filter chain ONLY if none is defined by the consuming application.
-     * This ensures that consuming applications can define their own security configuration
-     * without conflicts.
+     * Provides default security configuration for the core auth starter.
+     * This configuration will override Spring Boot's default security configuration.
+     * Can be disabled by setting core.auth.security.auto-configure=false
      */
-    @Bean
-    @ConditionalOnMissingBean(SecurityFilterChain.class)
+    @Bean("coreAuthSecurityFilterChain")
+    @Order(1)
     @ConditionalOnProperty(name = "core.auth.security.auto-configure", havingValue = "true", matchIfMissing = true)
     public SecurityFilterChain coreAuthDefaultSecurityFilterChain(HttpSecurity http, CoreAuthProperties properties) throws Exception {
         return http
