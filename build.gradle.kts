@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.control"
-version = "1.0.2"
+version = "1.0.3"
 description = "Core Authentication and User Management Spring Boot Starter"
 
 java {
@@ -28,9 +28,11 @@ dependencies {
 	api("org.springframework.boot:spring-boot-starter-security")
 	api("org.springframework.boot:spring-boot-starter-data-jpa")
 	api("org.springframework.boot:spring-boot-starter-thymeleaf")
-	api("org.springframework.boot:spring-boot-starter-mail")
 	api("org.springframework.boot:spring-boot-starter-validation")
 	api("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
+	
+	// Optional email support - consuming apps must add this if they want email functionality
+	compileOnly("org.springframework.boot:spring-boot-starter-mail")
 	
 	// Configuration processor for IDE support
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
@@ -45,6 +47,7 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
 	testImplementation("com.h2database:h2")
+	testImplementation("org.springframework.boot:spring-boot-starter-mail") // For testing
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

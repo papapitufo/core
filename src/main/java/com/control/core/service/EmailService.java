@@ -3,11 +3,15 @@ package com.control.core.service;
 import com.control.core.autoconfigure.CoreAuthProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 @Service
+@ConditionalOnClass(JavaMailSender.class)
+@ConditionalOnProperty(name = "core.auth.email.enabled", havingValue = "true", matchIfMissing = true)
 public class EmailService {
     
     @Autowired
