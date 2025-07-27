@@ -48,6 +48,11 @@ public class CoreAuthProperties {
      */
     private Email email = new Email();
     
+    /**
+     * Security auto-configuration settings
+     */
+    private Security security = new Security();
+    
     // Getters and Setters
     public String getDefaultSuccessUrl() {
         return defaultSuccessUrl;
@@ -111,6 +116,14 @@ public class CoreAuthProperties {
     
     public void setEmail(Email email) {
         this.email = email;
+    }
+    
+    public Security getSecurity() {
+        return security;
+    }
+    
+    public void setSecurity(Security security) {
+        this.security = security;
     }
     
     /**
@@ -178,6 +191,25 @@ public class CoreAuthProperties {
         
         public void setFromName(String fromName) {
             this.fromName = fromName;
+        }
+    }
+    
+    /**
+     * Security auto-configuration settings
+     */
+    public static class Security {
+        /**
+         * Whether to auto-configure security filter chain
+         */
+        private boolean autoConfigure = true;
+        
+        // Getters and Setters
+        public boolean isAutoConfigure() {
+            return autoConfigure;
+        }
+        
+        public void setAutoConfigure(boolean autoConfigure) {
+            this.autoConfigure = autoConfigure;
         }
     }
 }
