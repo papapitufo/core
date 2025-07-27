@@ -173,10 +173,19 @@ public class CoreAuthProperties {
      * Email configuration
      */
     public static class Email {
+        private boolean enabled = true;
         private String fromAddress = "noreply@example.com";
         private String fromName = "Core Auth";
         
         // Getters and Setters
+        public boolean isEnabled() {
+            return enabled;
+        }
+        
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+        
         public String getFromAddress() {
             return fromAddress;
         }

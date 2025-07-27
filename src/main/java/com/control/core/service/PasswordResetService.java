@@ -25,7 +25,7 @@ public class PasswordResetService {
     @Autowired
     private PasswordEncoder passwordEncoder;
     
-    @Autowired
+    @Autowired(required = false)
     private EmailService emailService;
     
     @Transactional
@@ -52,12 +52,18 @@ public class PasswordResetService {
         tokenRepository.save(resetToken);
         
         // Send email (we'll handle email service errors gracefully)
-        try {
-            emailService.sendPasswordResetEmail(user.getEmail(), user.getUsername(), token);
-        } catch (Exception e) {
-            // Log error but don't fail the request
-            System.err.println("Failed to send password reset email: " + e.getMessage());
-            throw new RuntimeException("Failed to send password reset email. Please try again later.");
+        if (emailService != null) {
+            try {
+                emailService.sendPasswordResetEmail(user.getEmail(), user.getUsername(), token);
+            } catch (Exception e) {
+                // Log error but don't fail the request
+                System.err.println("Failed to send password reset email: " + e.getMessage());
+                throw new RuntimeException("Failed to send password reset email. Please try again later.");
+            }
+        } else {
+            // Email service not available - log the token for manual handling
+            System.out.println("Password reset token generated for user " + user.getUsername() + ": " + token);
+            System.out.println("Email service not configured. Please manually provide this token to the user.");
         }
     }
     
@@ -98,11 +104,13 @@ public class PasswordResetService {
         tokenRepository.save(resetToken);
         
         // Send confirmation email
-        try {
-            emailService.sendPasswordChangeConfirmation(user.getEmail(), user.getUsername());
-        } catch (Exception e) {
-            // Log error but don't fail the password reset
-            System.err.println("Failed to send password change confirmation: " + e.getMessage());
+        if (emailService != null) {
+            try {
+                emailService.sendPasswordChangeConfirmation(user.getEmail(), user.getUsername());
+            } catch (Exception e) {
+                // Log error but don't fail the password reset
+                System.err.println("Failed to send password change confirmation: " + e.getMessage());
+            }
         }
     }
     

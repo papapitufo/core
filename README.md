@@ -2,7 +2,7 @@
 
 A comprehensive Spring Boot Starter for authentication and user management with a beautiful Material UI frontend.
 
-[![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)](https://github.com/papapitufo/core/packages)
+[![Version](https://img.shields.io/badge/version-1.0.3-blue.svg)](https://github.com/papapitufo/core/packages)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.3-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://openjdk.java.net/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -64,8 +64,11 @@ repositories {
 }
 
 dependencies {
-    implementation("com.control:core-auth-starter:1.0.2")
+    implementation("com.control:core-auth-starter:1.0.3")
     runtimeOnly("org.postgresql:postgresql") // or your preferred database
+    
+    // Required for email functionality (password reset emails)
+    implementation("org.springframework.boot:spring-boot-starter-mail")
 }
 ```
 
@@ -83,14 +86,62 @@ dependencies {
     <dependency>
         <groupId>com.control</groupId>
         <artifactId>core-auth-starter</artifactId>
-        <version>1.0.2</version>
+        <version>1.0.3</version>
+    </dependency>
+    <!-- Required for email functionality (password reset emails) -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-mail</artifactId>
     </dependency>
 </dependencies>
 ```
 
 ## 🛠️ Quick Setup
 
-### 1. Configure Your Application
+### 1. Add Required Dependencies
+
+**For Email Functionality (Password Reset):**
+If you want to use the password reset feature, you must add the mail starter dependency:
+
+```kotlin
+// Gradle
+dependencies {
+    implementation("com.control:core-auth-starter:1.0.3")
+    implementation("org.springframework.boot:spring-boot-starter-mail") // Required for email
+    runtimeOnly("org.postgresql:postgresql") // or your preferred database
+}
+```
+
+```xml
+<!-- Maven -->
+<dependencies>
+    <dependency>
+        <groupId>com.control</groupId>
+        <artifactId>core-auth-starter</artifactId>
+        <version>1.0.2</version>
+    </dependency>
+    <!-- Required for email functionality -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-mail</artifactId>
+    </dependency>
+</dependencies>
+```
+
+**Without Email (Basic Auth Only):**
+If you don't need password reset emails, you can skip the mail dependency:
+
+```kotlin
+// Gradle - Basic auth without email
+dependencies {
+    implementation("com.control:core-auth-starter:1.0.3")
+    runtimeOnly("org.postgresql:postgresql") // or your preferred database
+}
+```
+
+### 2. Configure Your Application
+
+### 2. Configure Your Application
 
 Add to your `application.properties`:
 
@@ -115,7 +166,7 @@ core.auth.email.username=your-email@gmail.com
 core.auth.email.password=your-app-password
 ```
 
-### 2. Enable Component Scanning
+### 3. Enable Component Scanning
 
 Update your main application class:
 
@@ -129,7 +180,7 @@ public class YourApplication {
 }
 ```
 
-### 3. Run Your Application
+### 4. Run Your Application
 
 That's it! Your application now includes:
 - 🔐 Login page at `/login`
@@ -186,6 +237,8 @@ spring.datasource.password=password
 ```
 
 ### 📧 Email Provider Configuration
+
+> **⚠️ Important:** Email functionality requires adding `spring-boot-starter-mail` to your dependencies. See [Quick Setup](#1-add-required-dependencies) for details.
 
 #### Gmail Configuration
 ```properties
@@ -560,6 +613,37 @@ Navigate to `http://localhost:8080/login` to see the starter in action.
 
 ### Common Issues
 
+**Email Dependency Missing Error**
+
+If you see errors like:
+- `Field mailSender in com.control.core.service.EmailService required a bean of type 'org.springframework.mail.javamail.JavaMailSender'`
+- `Parameter 0 of constructor in EmailService required a bean of type 'JavaMailSender' that could not be found`
+- `Consider defining a bean of type 'org.springframework.mail.javamail.JavaMailSender'`
+
+This means you're trying to use password reset functionality without the required email dependency.
+
+**Solution 1: Add Email Support (Recommended)**
+```kotlin
+// Add to your build.gradle.kts dependencies
+implementation("org.springframework.boot:spring-boot-starter-mail")
+```
+
+```xml
+<!-- Add to your pom.xml dependencies -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-mail</artifactId>
+</dependency>
+```
+
+**Solution 2: Disable Email Features**
+```properties
+# Disable email-dependent features
+core.auth.email.enabled=false
+core.auth.password-reset.enabled=false
+core.auth.forgot-password.enabled=false
+```
+
 **Spring Boot Version Compatibility Error**
 
 If you see errors like:
@@ -680,6 +764,29 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Email**: For private inquiries, contact [robimoller@example.com](mailto:robimoller@example.com)
 
 ## 📝 Changelog
+
+### Version 1.0.3 (2025-07-27)
+
+#### 🐛 Bug Fixes
+- **Email Dependencies**: Made email functionality optional to prevent startup errors
+  - EmailService now uses `@ConditionalOnClass(JavaMailSender.class)` and `@ConditionalOnProperty`
+  - PasswordResetService handles missing EmailService gracefully with `@Autowired(required = false)`
+  - Changed `spring-boot-starter-mail` from `api` to `compileOnly` dependency
+  - Added comprehensive documentation for email dependency requirements
+
+#### 📚 Documentation
+- Added detailed dependency instructions for email functionality
+- Enhanced troubleshooting section with email dependency error solutions
+- Updated version compatibility documentation
+- Added migration guide for Spring Boot 2.x to 3.x upgrade
+
+### Version 1.0.2 (2025-07-27)
+
+#### 🐛 Bug Fixes
+- **Security Configuration**: Fixed FilterChain bean conflicts with consuming applications
+  - Removed conflicting SecurityConfig class
+  - Enhanced auto-configuration with conditional beans
+  - Added comprehensive troubleshooting documentation
 
 ### Version 1.0.0 (2025-07-27)
 
