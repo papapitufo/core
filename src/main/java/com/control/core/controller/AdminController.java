@@ -28,6 +28,11 @@ public class AdminController {
                                 @RequestParam(value = "status", required = false) String statusFilter,
                                 Model model) {
         
+        // Add empty CreateUserRequest if not already present (for form binding)
+        if (!model.containsAttribute("createUserRequest")) {
+            model.addAttribute("createUserRequest", new CreateUserRequest());
+        }
+        
         List<User> users = userService.getAllUsers();
         
         // Apply filters
@@ -76,6 +81,8 @@ public class AdminController {
                            RedirectAttributes redirectAttributes) {
         
         if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.createUserRequest", bindingResult);
+            redirectAttributes.addFlashAttribute("createUserRequest", request);
             redirectAttributes.addFlashAttribute("error", "Validation errors occurred");
             return "redirect:/admin/users";
         }
@@ -96,7 +103,7 @@ public class AdminController {
     }
     
     @PostMapping("/users/{id}/activate")
-    public String activateUser(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String activateUser(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
             User user = userService.getUserById(id)
                     .orElseThrow(() -> new RuntimeException("User not found"));
@@ -111,7 +118,7 @@ public class AdminController {
     }
     
     @PostMapping("/users/{id}/deactivate")
-    public String deactivateUser(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String deactivateUser(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
             User user = userService.getUserById(id)
                     .orElseThrow(() -> new RuntimeException("User not found"));
@@ -126,7 +133,7 @@ public class AdminController {
     }
     
     @GetMapping("/users/{id}/edit")
-    public String editUserForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+    public String editUserForm(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
         try {
             User user = userService.getUserById(id)
                     .orElseThrow(() -> new RuntimeException("User not found"));
@@ -139,7 +146,7 @@ public class AdminController {
     }
     
     @PostMapping("/users/{id}/edit")
-    public String updateUser(@PathVariable Long id,
+    public String updateUser(@PathVariable("id") Long id,
                            @RequestParam String username,
                            @RequestParam String email,
                            @RequestParam String role,
@@ -156,7 +163,7 @@ public class AdminController {
     }
     
     @GetMapping("/users/{id}/history")
-    public String getUserHistory(@PathVariable Long id, Model model) {
+    public String getUserHistory(@PathVariable("id") Long id, Model model) {
         try {
             User user = userService.getUserById(id)
                     .orElseThrow(() -> new RuntimeException("User not found"));

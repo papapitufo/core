@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>User Management - Core Application</title>
     
     <!-- Material UI CSS -->
@@ -428,6 +430,24 @@
             border-left: 4px solid #c62828;
         }
         
+        .field-error {
+            margin-top: 4px;
+            padding: 4px 0;
+        }
+        
+        .error-text {
+            color: #c62828;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .error-text::before {
+            content: '⚠';
+            margin-right: 4px;
+            font-size: 0.875rem;
+        }
+        
         .pagination {
             display: flex;
             justify-content: center;
@@ -662,25 +682,48 @@
                 <h3 class="modal-title">Create New User</h3>
                 <button class="close" onclick="closeCreateUserModal()">&times;</button>
             </div>
-            <form th:action="@{/admin/users/create}" method="post">
+            <form th:action="@{/admin/users/create}" method="post" th:object="${createUserRequest}">
+                <!-- Validation errors summary -->
+                <div th:if="${#fields.hasAnyErrors()}" class="alert alert-error" style="margin-bottom: 20px;">
+                    <span class="material-icons" style="margin-right: 8px; font-size: 18px;">error</span>
+                    <div>
+                        <strong>Please fix the following errors:</strong>
+                        <ul style="margin: 8px 0 0 24px; list-style: disc;">
+                            <li th:each="error : ${#fields.allErrors()}" th:text="${error}"></li>
+                        </ul>
+                    </div>
+                </div>
+                
                 <div class="form-field">
-                    <input type="text" name="username" class="text-field" placeholder=" " required>
+                    <input type="text" th:field="*{username}" class="text-field" placeholder=" " required>
                     <label class="text-field-label">Username</label>
+                    <div th:if="${#fields.hasErrors('username')}" class="field-error">
+                        <span th:errors="*{username}" class="error-text"></span>
+                    </div>
                 </div>
                 <div class="form-field">
-                    <input type="email" name="email" class="text-field" placeholder=" " required>
+                    <input type="email" th:field="*{email}" class="text-field" placeholder=" " required>
                     <label class="text-field-label">Email</label>
+                    <div th:if="${#fields.hasErrors('email')}" class="field-error">
+                        <span th:errors="*{email}" class="error-text"></span>
+                    </div>
                 </div>
                 <div class="form-field">
-                    <input type="password" name="password" class="text-field" placeholder=" " required>
+                    <input type="password" th:field="*{password}" class="text-field" placeholder=" " required>
                     <label class="text-field-label">Password</label>
+                    <div th:if="${#fields.hasErrors('password')}" class="field-error">
+                        <span th:errors="*{password}" class="error-text"></span>
+                    </div>
                 </div>
                 <div class="form-field">
-                    <select name="role" class="select-field" required>
+                    <select th:field="*{role}" class="select-field" required>
                         <option value="">Select Role</option>
                         <option value="USER">User</option>
                         <option value="ADMIN">Administrator</option>
                     </select>
+                    <div th:if="${#fields.hasErrors('role')}" class="field-error">
+                        <span th:errors="*{role}" class="error-text"></span>
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-outline" onclick="closeCreateUserModal()">Cancel</button>
@@ -732,11 +775,10 @@
                 
                 // Add CSRF token
                 const csrfToken = document.querySelector('meta[name="_csrf"]');
-                const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
-                if (csrfToken && csrfHeader) {
+                if (csrfToken) {
                     const hiddenField = document.createElement('input');
                     hiddenField.type = 'hidden';
-                    hiddenField.name = '_token';
+                    hiddenField.name = '_csrf';
                     hiddenField.value = csrfToken.getAttribute('content');
                     form.appendChild(hiddenField);
                 }
@@ -778,6 +820,16 @@
                 historyModal.style.display = 'none';
             }
         }
+        
+        // Auto-open modal if there are validation errors
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if there are validation errors by looking for field errors in the form
+            const hasValidationErrors = document.querySelector('#createUserModal .field-error') !== null;
+            
+            if (hasValidationErrors) {
+                openCreateUserModal();
+            }
+        });
     </script>
 </body>
 </html>

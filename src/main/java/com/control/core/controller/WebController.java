@@ -81,13 +81,25 @@ public class WebController {
         return "dashboard";
     }
     
+    @GetMapping("/test-email")
+    public String testEmail() {
+        try {
+            passwordResetService.sendPasswordResetEmail("iborrelleom@gmail.com");
+            return "redirect:/dashboard?emailTest=success";
+        } catch (Exception e) {
+            System.err.println("Email test failed: " + e.getMessage());
+            e.printStackTrace();
+            return "redirect:/dashboard?emailTest=failed&error=" + e.getMessage();
+        }
+    }
+    
     @GetMapping("/forgot-password")
     public String forgotPassword() {
         return "forgot-password";
     }
     
     @PostMapping("/forgot-password")
-    public String processForgotPassword(@RequestParam String email, Model model) {
+    public String processForgotPassword(@RequestParam("email") String email, Model model) {
         try {
             passwordResetService.sendPasswordResetEmail(email);
             model.addAttribute("success", true);
@@ -99,7 +111,7 @@ public class WebController {
     }
     
     @GetMapping("/reset-password")
-    public String resetPassword(@RequestParam String token, Model model) {
+    public String resetPassword(@RequestParam("token") String token, Model model) {
         if (passwordResetService.isTokenValid(token)) {
             model.addAttribute("token", token);
             return "reset-password";
@@ -110,9 +122,9 @@ public class WebController {
     }
     
     @PostMapping("/reset-password")
-    public String processResetPassword(@RequestParam String token,
-                                     @RequestParam String password,
-                                     @RequestParam String confirmPassword,
+    public String processResetPassword(@RequestParam("token") String token,
+                                     @RequestParam("password") String password,
+                                     @RequestParam("confirmPassword") String confirmPassword,
                                      Model model) {
         
         // Validate token
