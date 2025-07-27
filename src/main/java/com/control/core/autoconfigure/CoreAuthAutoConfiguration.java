@@ -1,5 +1,6 @@
 package com.control.core.autoconfigure;
 
+import com.control.core.security.CustomAuthenticationSuccessHandler;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -48,48 +49,29 @@ public class CoreAuthAutoConfiguration {
      * This configuration will override Spring Boot's default security configuration.
      * Can be disabled by setting core.auth.security.auto-configure=false
      */
-    @Bean("coreAuthSecurityFilterChain")
+        @Bean
     @Order(1)
+    @ConditionalOnMissingBean(name = "coreAuthDefaultSecurityFilterChain")
     @ConditionalOnProperty(name = "core.auth.security.auto-configure", havingValue = "true", matchIfMissing = true)
     public SecurityFilterChain coreAuthDefaultSecurityFilterChain(HttpSecurity http, CoreAuthProperties properties) throws Exception {
+        System.out.println("🔧 CoreAuth: Configuring security with defaultSuccessUrl: " + properties.getDefaultSuccessUrl());
+        
         return http
-            .authorizeHttpRequests(auth -> {
-                // Always allow static resources and login
-                auth.requestMatchers("/login", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll();
-                
-                // Conditionally allow registration
-                if (properties.isRegistrationEnabled()) {
-                    auth.requestMatchers("/signup").permitAll();
-                }
-                
-                // Conditionally allow password reset
-                if (properties.isForgotPasswordEnabled()) {
-                    auth.requestMatchers("/forgot-password", "/reset-password").permitAll();
-                }
-                
-                // Conditionally protect admin endpoints
-                if (properties.isAdminPanelEnabled()) {
-                    auth.requestMatchers("/admin/**").hasRole("ADMIN");
-                }
-                
-                // Require authentication for everything else
-                auth.anyRequest().authenticated();
-            })
+            .securityMatcher("/login", "/logout", "/signup", "/forgot-password", "/reset-password", "/admin/**", "/dashboard", "/api/**")
+            .authorizeHttpRequests(authz -> authz
+                .requestMatchers("/login", "/signup", "/forgot-password", "/reset-password", "/css/**", "/js/**", "/images/**").permitAll()
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
+            )
             .formLogin(form -> form
                 .loginPage("/login")
-                .defaultSuccessUrl(properties.getDefaultSuccessUrl(), false)
+                .successHandler(new CustomAuthenticationSuccessHandler(properties.getDefaultSuccessUrl()))
                 .failureUrl("/login?error=true")
                 .permitAll()
             )
             .logout(logout -> logout
-                .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout=true")
-                .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
                 .permitAll()
-            )
-            .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**") // Allow API endpoints to be called without CSRF if needed
             )
             .build();
     }

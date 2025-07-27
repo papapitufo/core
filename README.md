@@ -1064,7 +1064,13 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📝 Version History
 
-### v1.0.8 (Latest)
+### v1.0.9 (Latest)
+- **Fixed**: Chrome DevTools and browser-specific URL interference with authentication redirects
+- **Added**: Custom `AuthenticationSuccessHandler` that filters out invalid redirect URLs
+- **Improved**: Better handling of saved requests and redirect URL validation
+- **Enhanced**: More robust redirect behavior that ignores `.well-known`, `devtools`, and other browser-specific URLs
+
+### v1.0.8
 - **Fixed**: Redirect URL behavior after login now respects Spring MVC view controller mappings
 - **Changed**: `defaultSuccessUrl` now uses `alwaysUse=false` to allow custom URL routing in consumer applications
 - **Improved**: Consumer applications can now properly map "/" to custom templates (e.g., "home") without conflicts
