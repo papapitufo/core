@@ -1062,6 +1062,33 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
+## 📝 Version History
+
+### v1.0.8 (Latest)
+- **Fixed**: Redirect URL behavior after login now respects Spring MVC view controller mappings
+- **Changed**: `defaultSuccessUrl` now uses `alwaysUse=false` to allow custom URL routing in consumer applications
+- **Improved**: Consumer applications can now properly map "/" to custom templates (e.g., "home") without conflicts
+
+### v1.0.7
+- Complete configuration documentation with all properties
+- Enhanced README with troubleshooting section
+- Improved auto-configuration stability
+
+### v1.0.6
+- Added comprehensive property configuration system
+- Enhanced security configuration options
+- Improved integration documentation
+
+### v1.0.5
+- Enhanced email service with multiple provider support
+- Added password reset functionality
+- Improved Material UI styling
+
+### Earlier Versions
+- Initial release with Thymeleaf templates
+- Basic authentication and user management
+- Admin panel functionality
+
 ## Support
 
 For issues and questions:
