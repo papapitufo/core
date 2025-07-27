@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
  * Creates default admin user on startup if configured
  */
 @Component
-@ConditionalOnProperty(prefix = "core.auth.default-admin", name = "create-on-startup", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "core.auth.admin", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class DefaultAdminCreator implements CommandLineRunner {
     
     private static final Logger logger = LoggerFactory.getLogger(DefaultAdminCreator.class);
@@ -30,9 +30,9 @@ public class DefaultAdminCreator implements CommandLineRunner {
     
     @Override
     public void run(String... args) throws Exception {
-        CoreAuthProperties.AdminUser adminConfig = properties.getDefaultAdmin();
+        CoreAuthProperties.AdminUser adminConfig = properties.getAdmin();
         
-        if (!adminConfig.isCreateOnStartup()) {
+        if (!adminConfig.isEnabled()) {
             return;
         }
         

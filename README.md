@@ -2,7 +2,7 @@
 
 A comprehensive Spring Boot Starter for authentication and user management with a beautiful Material UI frontend.
 
-[![Version](https://img.shields.io/badge/version-1.0.3-blue.svg)](https://github.com/papapitufo/core/packages)
+[![Version](https://img.shields.io/badge/version-1.0.4-blue.svg)](https://github.com/papapitufo/core/packages)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.3-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://openjdk.java.net/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -86,7 +86,7 @@ dependencies {
     <dependency>
         <groupId>com.control</groupId>
         <artifactId>core-auth-starter</artifactId>
-        <version>1.0.3</version>
+        <version>1.0.4</version>
     </dependency>
     <!-- Required for email functionality (password reset emails) -->
     <dependency>
@@ -344,27 +344,29 @@ Override CSS by creating `src/main/resources/static/css/custom.css`:
 
 ### Security Customization
 
-Create your own `SecurityFilterChain` bean to customize security:
+The easiest way to add your own security rules is to use a different bean method name:
 
 ```java
 @Configuration
-public class CustomSecurityConfig {
+@EnableWebSecurity
+public class YourSecurityConfig {
     
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain businessSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/custom/**").permitAll()
-                .anyRequest().authenticated()
+                // Your business endpoints
+                .requestMatchers("/api/**").authenticated()
+                .requestMatchers("/admin/custom/**").hasRole("ADMIN")
+                .anyRequest().permitAll()
             )
-            .formLogin(form -> form
-                .loginPage("/custom-login")
-                .defaultSuccessUrl("/custom-dashboard")
-            )
+            .formLogin(form -> form.defaultSuccessUrl("/"))
             .build();
     }
 }
 ```
+
+Core Auth will handle its own endpoints (`/login`, `/admin/users`, etc.) while your configuration handles your business logic endpoints.
 
 ## 🚀 Advanced Configuration
 
@@ -385,9 +387,45 @@ core.auth.user-dashboard.enabled=true
 
 ### Custom Security Configuration
 
-If you need custom security rules, you have two approaches:
+If you need custom security rules, you have several approaches:
 
-**Approach 1: Disable Auto-Configuration and Define Your Own**
+**Approach 1: Use Different Bean Names (Recommended)**
+
+Keep both Core Auth security and your custom security by using different bean method names:
+
+```java
+@Configuration
+@EnableWebSecurity
+public class YourSecurityConfig {
+    
+    @Bean
+    public SecurityFilterChain businessSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+            .authorizeHttpRequests(auth -> auth
+                // Your business-specific endpoints
+                .requestMatchers("/blog/manager/**").authenticated()
+                .requestMatchers("/api/**", "/actuator/**").authenticated()
+                .anyRequest().permitAll()
+            )
+            .formLogin(form -> form.defaultSuccessUrl("/", true))
+            .logout(logout -> logout.deleteCookies("JSESSIONID"))
+            .rememberMe(remember -> remember.key("secret-key"))
+            .sessionManagement(session -> session.maximumSessions(1))
+            .httpBasic(httpBasic -> {})
+            .csrf(csrf -> csrf.disable())
+            .build();
+    }
+}
+```
+
+**Benefits:**
+- ✅ Core Auth handles authentication UI (`/login`, `/signup`, `/dashboard`, `/admin/**`)
+- ✅ Your config handles business endpoints (`/api/**`, `/blog/**`, etc.)
+- ✅ Spring Security automatically merges configurations
+- ✅ Zero configuration needed for Core Auth endpoints
+
+**Approach 2: Disable Auto-Configuration and Define Your Own**
+**Approach 2: Disable Auto-Configuration and Define Your Own**
 ```properties
 core.auth.security.auto-configure=false
 ```
@@ -402,8 +440,12 @@ public class CustomSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
             .authorizeHttpRequests(auth -> auth
+                // Core Auth endpoints (you need to configure these manually)
                 .requestMatchers("/login", "/signup", "/css/**", "/js/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/dashboard").authenticated()
+                
+                // Your business endpoints
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().authenticated()
             )
@@ -416,7 +458,7 @@ public class CustomSecurityConfig {
 }
 ```
 
-**Approach 2: Use Core Auth Security with Custom Rules**
+**Approach 3: Use Core Auth Security with Additional Rules**
 Keep the auto-configuration enabled and add additional security rules:
 ```java
 @Configuration
@@ -670,20 +712,58 @@ This usually means you're using **Spring Boot 2.x** with our **Spring Boot 3.x**
 
 If you get an error like "The bean 'filterChain' could not be registered", it means your application already has a security configuration. You have several options:
 
-**Option 1: Disable Core Auth Security Auto-Configuration (Recommended)**
+**Option 1: Use Different Bean Names (Recommended)**
+
+Simply rename your security bean method to avoid the conflict:
+
+```java
+@Configuration
+@EnableWebSecurity
+public class YourSecurityConfig {
+    
+    @Bean
+    public SecurityFilterChain applicationSecurityFilterChain(HttpSecurity http) throws Exception {
+        // Your existing security configuration
+        http.authorizeHttpRequests(authz -> authz
+                .requestMatchers("/blog/manager/**").authenticated()
+                .requestMatchers("/api/**", "/actuator/**").authenticated()
+                .anyRequest().permitAll()
+            )
+            .formLogin(form -> form.defaultSuccessUrl("/", true))
+            .logout(logout -> logout.deleteCookies("JSESSIONID"))
+            .rememberMe(remember -> remember
+                .key("secret-key")
+                .tokenValiditySeconds(2592000) // 30 days
+            )
+            .sessionManagement(session -> session
+                .maximumSessions(1)
+                .maxSessionsPreventsLogin(false)
+            )
+            .httpBasic(httpBasic -> {})
+            .csrf(csrf -> csrf.disable());
+        return http.build();
+    }
+}
+```
+
+**Why this works:**
+- Core Auth Starter creates a bean named `coreAuthDefaultSecurityFilterChain`
+- Your application creates a bean named `applicationSecurityFilterChain`
+- Spring Security will merge both configurations automatically
+- Core Auth endpoints (`/login`, `/admin/**`, etc.) are handled by Core Auth
+- Your business endpoints (`/blog/manager/**`, `/api/**`) are handled by your config
+
+**Option 2: Disable Core Auth Security Auto-Configuration**
 ```properties
 # Let your application handle security configuration completely
 core.auth.security.auto-configure=false
 ```
 
-**Option 2: Enable Bean Definition Overriding**
+**Option 3: Enable Bean Definition Overriding**
 ```properties
 # Allow your security config to override the starter's
 spring.main.allow-bean-definition-overriding=true
 ```
-
-**Option 3: Use Core Auth Security (Remove Your Security Config)**
-Remove your application's `@Configuration` class that defines `SecurityFilterChain` and let Core Auth handle security.
 
 **Database Connection Errors**
 ```properties
@@ -764,6 +844,24 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Email**: For private inquiries, contact [robimoller@example.com](mailto:robimoller@example.com)
 
 ## 📝 Changelog
+
+### Version 1.0.4 (2025-07-27)
+
+#### 🔧 Property Configuration Fixes
+- **Configuration Properties**: Fixed property mapping for admin configuration
+  - Renamed field from `defaultAdmin` to `admin` in CoreAuthProperties
+  - Updated getter/setter methods from `getDefaultAdmin()/setDefaultAdmin()` to `getAdmin()/setAdmin()`
+  - Corrected conditional property annotations from `core.auth.default-admin.*` to `core.auth.admin.*`
+  - Updated AdminUser properties: replaced `createOnStartup` with `enabled` field
+  - Fixed DefaultAdminCreator to use correct property references and conditional annotations
+
+#### 📚 Documentation
+- **Property Examples**: Updated all documentation to reflect corrected property names
+- **Configuration Guide**: Enhanced property mapping examples for better clarity
+
+#### ✅ Compatibility
+- **Spring Boot Configuration Processor**: Improved property recognition in IDEs
+- **Consumer Applications**: Resolved "unknown properties" errors in application.properties
 
 ### Version 1.0.3 (2025-07-27)
 

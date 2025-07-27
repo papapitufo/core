@@ -5,6 +5,41 @@ All notable changes to the Core Auth Starter project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2025-07-27
+
+### 🔧 Fixed
+
+#### Configuration Property Mapping
+- **Fixed property mapping for admin configuration** - resolved "unknown properties" error in consumer applications
+- **Renamed field from `defaultAdmin` to `admin`** in CoreAuthProperties to match documented property paths
+- **Updated getter/setter methods** from `getDefaultAdmin()/setDefaultAdmin()` to `getAdmin()/setAdmin()`
+- **Corrected conditional property annotations** from `core.auth.default-admin.*` to `core.auth.admin.*`
+- **Updated AdminUser properties** replaced `createOnStartup` with `enabled` field for better clarity
+- **Fixed DefaultAdminCreator** to use correct property references and conditional annotations
+
+#### Property Structure Alignment
+- **Properties now correctly map** from `application.properties` to Java configuration objects
+- **Improved Spring Boot configuration processor compatibility** for better IDE support and property recognition
+- **Consistent property naming** between documentation and implementation
+
+### 📖 Documentation
+- **Updated README examples** to reflect corrected property names
+- **Enhanced configuration documentation** with proper property paths
+
+## [1.0.3] - 2025-07-27
+
+### 🔧 Fixed
+
+#### Email Dependencies
+- **Fixed optional email functionality** to gracefully handle missing spring-boot-starter-mail dependency
+- **Added conditional loading** for EmailService with `@ConditionalOnClass(JavaMailSender.class)`
+- **Improved error handling** when email features are used without mail starter dependency
+
+#### Enhanced Configuration
+- **Better dependency management** for optional features
+- **Clearer error messages** when required dependencies are missing
+- **Improved Spring Boot auto-configuration** for email services
+
 ## [1.0.2] - 2025-07-27
 
 ### 🔧 Fixed
