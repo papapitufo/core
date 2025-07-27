@@ -39,9 +39,9 @@ public class CoreAuthProperties {
     private String baseUrl = "http://localhost:8080";
     
     /**
-     * Default admin user configuration
+     * Admin user configuration
      */
-    private AdminUser defaultAdmin = new AdminUser();
+    private AdminUser admin = new AdminUser();
     
     /**
      * Email configuration
@@ -102,12 +102,12 @@ public class CoreAuthProperties {
         this.baseUrl = baseUrl;
     }
     
-    public AdminUser getDefaultAdmin() {
-        return defaultAdmin;
+    public AdminUser getAdmin() {
+        return admin;
     }
     
-    public void setDefaultAdmin(AdminUser defaultAdmin) {
-        this.defaultAdmin = defaultAdmin;
+    public void setAdmin(AdminUser admin) {
+        this.admin = admin;
     }
     
     public Email getEmail() {
@@ -127,13 +127,13 @@ public class CoreAuthProperties {
     }
     
     /**
-     * Default admin user configuration
+     * Admin user configuration
      */
     public static class AdminUser {
         private String username = "admin";
         private String email = "admin@example.com";
         private String password = "admin123";
-        private boolean createOnStartup = true;
+        private boolean enabled = true;
         
         // Getters and Setters
         public String getUsername() {
@@ -160,12 +160,12 @@ public class CoreAuthProperties {
             this.password = password;
         }
         
-        public boolean isCreateOnStartup() {
-            return createOnStartup;
+        public boolean isEnabled() {
+            return enabled;
         }
         
-        public void setCreateOnStartup(boolean createOnStartup) {
-            this.createOnStartup = createOnStartup;
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
         }
     }
     
