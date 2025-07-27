@@ -5,6 +5,50 @@ All notable changes to the Core Auth Starter project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7] - 2025-07-27
+
+### 📖 Documentation
+
+#### Complete Configuration Reference
+- **Added comprehensive configuration table** with all available properties, types, defaults, and descriptions
+- **Added complete example configuration** showing all properties in action
+- **Added feature disabling examples** showing how to turn off specific functionality
+- **Enhanced property organization** with clear categorization (Core, Admin, Email, Security)
+- **Added production security warnings** for default admin credentials
+
+#### Configuration Properties Documentation
+- **Complete reference table** for all 12+ configuration properties
+- **Practical examples** for common configuration scenarios
+- **Security best practices** with warnings about default values
+- **Copy-paste ready configurations** for different use cases
+
+### 📋 New Documentation Sections
+- **📋 Complete Configuration Reference** - Master list of all properties
+- **🚫 Disabling Features** - How to turn off specific functionality
+- **📝 Example Configuration** - Complete working example
+
+## [1.0.6] - 2025-07-27
+
+### 📖 Documentation
+
+#### Enhanced Configuration Documentation
+- **Added comprehensive UI and Navigation settings** documentation in README
+- **Documented `core.auth.default-success-url` property** for customizing post-login landing page
+- **Enhanced configuration examples** with all available UI control properties
+- **Improved property organization** with clear sections for admin, UI, database, and email settings
+- **Added examples for common configuration scenarios** including custom landing pages
+
+#### Configuration Properties Reference
+- **`core.auth.default-success-url`** - Set custom landing page after login (default: `/dashboard`)
+- **`core.auth.registration-enabled`** - Enable/disable user registration
+- **`core.auth.admin-panel-enabled`** - Enable/disable admin panel access
+- **`core.auth.forgot-password-enabled`** - Enable/disable password reset functionality
+- **`core.auth.base-url`** - Base URL for email links
+
+### ✨ Features
+- **Default success URL** is already configurable via `core.auth.default-success-url` property
+- **All UI features** can be enabled/disabled via configuration properties
+
 ## [1.0.5] - 2025-07-27
 
 ### 🔧 Fixed
