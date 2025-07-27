@@ -2,7 +2,7 @@
 
 A comprehensive Spring Boot Starter for authentication and user management with a beautiful Material UI frontend.
 
-[![Version](https://img.shields.io/badge/version-1.0.5-blue.svg)](https://github.com/papapitufo/core/packages)
+[![Version](https://img.shields.io/badge/version-1.0.7-blue.svg)](https://github.com/papapitufo/core/packages)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.3-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://openjdk.java.net/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -158,6 +158,13 @@ core.auth.admin.username=admin
 core.auth.admin.password=admin123
 core.auth.admin.email=admin@example.com
 
+# UI Configuration
+core.auth.default-success-url=/dashboard
+# Other available options:
+# core.auth.registration-enabled=true
+# core.auth.admin-panel-enabled=true
+# core.auth.forgot-password-enabled=true
+
 # Email Configuration (optional - for password reset)
 core.auth.email.provider=gmail
 core.auth.email.smtp.host=smtp.gmail.com
@@ -213,6 +220,25 @@ core.auth.admin.enabled=true
 core.auth.admin.username=admin
 core.auth.admin.password=securePassword123
 core.auth.admin.email=admin@yourcompany.com
+```
+
+### UI and Navigation Settings
+
+```properties
+# Default page after successful login (default: /dashboard)
+core.auth.default-success-url=/dashboard
+
+# Enable/disable user registration (default: true)
+core.auth.registration-enabled=true
+
+# Enable/disable admin panel access (default: true)
+core.auth.admin-panel-enabled=true
+
+# Enable/disable forgot password functionality (default: true)
+core.auth.forgot-password-enabled=true
+
+# Base URL for email links (used in password reset emails)
+core.auth.base-url=http://localhost:8080
 ```
 
 ### Database Support
@@ -309,6 +335,109 @@ CREATE TABLE password_reset_tokens (
     expiry_date TIMESTAMP NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+```
+
+## 📋 Complete Configuration Reference
+
+Below is the complete list of all configuration properties available in the Core Auth Starter:
+
+### 🔧 Core Settings
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `core.auth.default-success-url` | String | `/dashboard` | URL to redirect to after successful login |
+| `core.auth.registration-enabled` | Boolean | `true` | Enable/disable user registration functionality |
+| `core.auth.password-reset-enabled` | Boolean | `true` | Enable/disable password reset functionality |
+| `core.auth.admin-panel-enabled` | Boolean | `true` | Enable/disable admin panel access |
+| `core.auth.forgot-password-enabled` | Boolean | `true` | Enable/disable forgot password feature |
+| `core.auth.base-url` | String | `http://localhost:8080` | Base URL for email links and redirects |
+
+### 👤 Admin User Configuration
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `core.auth.admin.enabled` | Boolean | `true` | Enable automatic admin user creation |
+| `core.auth.admin.username` | String | `admin` | Default admin username |
+| `core.auth.admin.password` | String | `admin123` | Default admin password ⚠️ Change this! |
+| `core.auth.admin.email` | String | `admin@example.com` | Default admin email address |
+
+### 📧 Email Configuration
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `core.auth.email.enabled` | Boolean | `true` | Enable/disable email functionality |
+| `core.auth.email.from-address` | String | `noreply@example.com` | From address for system emails |
+| `core.auth.email.from-name` | String | `Core Auth` | From name for system emails |
+
+### 🔒 Security Configuration
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `core.auth.security.auto-configure` | Boolean | `true` | Enable/disable automatic security configuration |
+
+### 📝 Example Configuration
+
+Here's a complete example configuration for `application.properties`:
+
+```properties
+# Database Configuration
+spring.datasource.url=jdbc:postgresql://localhost:5432/myapp
+spring.datasource.username=postgres
+spring.datasource.password=password
+spring.jpa.hibernate.ddl-auto=update
+
+# Core Auth Settings
+core.auth.default-success-url=/home
+core.auth.registration-enabled=true
+core.auth.admin-panel-enabled=true
+core.auth.forgot-password-enabled=true
+core.auth.base-url=https://myapp.com
+
+# Admin User (⚠️ Change these in production!)
+core.auth.admin.enabled=true
+core.auth.admin.username=admin
+core.auth.admin.password=MySecurePassword123!
+core.auth.admin.email=admin@mycompany.com
+
+# Email Settings
+core.auth.email.enabled=true
+core.auth.email.from-address=noreply@mycompany.com
+core.auth.email.from-name=My Application
+
+# Security
+core.auth.security.auto-configure=true
+
+# Spring Mail Configuration (required for email features)
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=your-email@gmail.com
+spring.mail.password=your-app-password
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+```
+
+### 🚫 Disabling Features
+
+You can disable specific features by setting them to `false`:
+
+```properties
+# Disable user registration
+core.auth.registration-enabled=false
+
+# Disable admin panel
+core.auth.admin-panel-enabled=false
+
+# Disable password reset
+core.auth.forgot-password-enabled=false
+
+# Disable email functionality
+core.auth.email.enabled=false
+
+# Disable automatic admin user creation
+core.auth.admin.enabled=false
+
+# Disable automatic security configuration
+core.auth.security.auto-configure=false
 ```
 
 ## 🎨 Customization
