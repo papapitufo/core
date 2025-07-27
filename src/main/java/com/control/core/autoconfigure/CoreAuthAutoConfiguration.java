@@ -77,7 +77,7 @@ public class CoreAuthAutoConfiguration {
             })
             .formLogin(form -> form
                 .loginPage("/login")
-                .defaultSuccessUrl(properties.getDefaultSuccessUrl(), true)
+                .defaultSuccessUrl(properties.getDefaultSuccessUrl(), false)
                 .failureUrl("/login?error=true")
                 .permitAll()
             )
