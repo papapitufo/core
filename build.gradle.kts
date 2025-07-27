@@ -1,16 +1,21 @@
 plugins {
 	java
+	`java-library`
 	id("org.springframework.boot") version "3.5.3"
 	id("io.spring.dependency-management") version "1.1.7"
+	`maven-publish`
 }
 
 group = "com.control"
-version = "0.0.1-SNAPSHOT"
+version = "1.0.1"
+description = "Core Authentication and User Management Spring Boot Starter"
 
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(17)
 	}
+	withSourcesJar()
+	withJavadocJar()
 }
 
 repositories {
@@ -18,21 +23,33 @@ repositories {
 }
 
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-hateoas")
-	implementation("org.springframework.boot:spring-boot-starter-oauth2-authorization-server")
-	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
-	implementation("org.springframework.boot:spring-boot-starter-security")
-	implementation("org.springframework.boot:spring-boot-starter-web")
-	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
-	implementation("org.springframework.boot:spring-boot-starter-mail")
-	implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
-	implementation("org.springframework.boot:spring-boot-starter-actuator")
-	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.springframework.boot:spring-boot-starter-validation")
-	runtimeOnly("org.postgresql:postgresql")
-	developmentOnly("org.springframework.boot:spring-boot-devtools")
+	// Spring Boot Starters - API dependencies (will be transitive)
+	api("org.springframework.boot:spring-boot-starter-web")
+	api("org.springframework.boot:spring-boot-starter-security")
+	api("org.springframework.boot:spring-boot-starter-data-jpa")
+	api("org.springframework.boot:spring-boot-starter-thymeleaf")
+	api("org.springframework.boot:spring-boot-starter-mail")
+	api("org.springframework.boot:spring-boot-starter-validation")
+	api("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
+	
+	// Configuration processor for IDE support
+	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+	
+	// Optional dependencies - let consuming apps choose their database
+	compileOnly("org.postgresql:postgresql")
+	compileOnly("com.h2database:h2")
+	compileOnly("org.springframework.boot:spring-boot-starter-actuator")
+	
+	// Remove OAuth2 dependencies as they're not core to basic auth
+	// implementation("org.springframework.boot:spring-boot-starter-hateoas")
+	// implementation("org.springframework.boot:spring-boot-starter-oauth2-authorization-server")
+	// implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+	
+	// Development and Test dependencies
+	compileOnly("org.springframework.boot:spring-boot-devtools")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
+	testImplementation("com.h2database:h2")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -42,4 +59,82 @@ tasks.withType<Test> {
 
 tasks.withType<JavaCompile> {
 	options.compilerArgs.add("-parameters")
+}
+
+// Disable the bootJar task since this is a library, not an executable application
+tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
+	enabled = false
+}
+
+// Enable the plain jar task
+tasks.getByName<Jar>("jar") {
+	enabled = true
+	archiveClassifier = ""
+	// Exclude the main application class since this is a library
+	exclude("**/CoreApplication.class")
+	exclude("**/CoreApplication*.class")
+	// Exclude application configuration files that are specific to the main app
+	exclude("application.properties")
+	exclude("data.sql")
+	exclude("application-*.properties")
+}
+
+publishing {
+	publications {
+		create<MavenPublication>("maven") {
+			from(components["java"])
+			
+			groupId = project.group.toString()
+			artifactId = "core-auth-starter"
+			version = project.version.toString()
+			
+			// Resolve dependency versions
+			versionMapping {
+				usage("java-api") {
+					fromResolutionOf("runtimeClasspath")
+				}
+				usage("java-runtime") {
+					fromResolutionResult()
+				}
+			}
+			
+			pom {
+				name.set("Core Auth Starter")
+				description.set("A comprehensive Spring Boot Starter for authentication and user management with Material UI frontend. Features include login/logout, user registration, password reset, admin dashboard, role-based access control, and multi-provider email support.")
+				url.set("https://github.com/papapitufo/core")
+				
+				licenses {
+					license {
+						name.set("MIT License")
+						url.set("https://opensource.org/licenses/MIT")
+					}
+				}
+				
+				developers {
+					developer {
+						id.set("papapitufo")
+						name.set("Rob Moller")
+						email.set("robimoller@example.com")
+					}
+				}
+				
+				scm {
+					connection.set("scm:git:git://github.com/papapitufo/core.git")
+					developerConnection.set("scm:git:ssh://github.com/papapitufo/core.git")
+					url.set("https://github.com/papapitufo/core")
+				}
+			}
+		}
+	}
+	
+	repositories {
+		maven {
+			name = "GitHubPackages"
+			url = uri("https://maven.pkg.github.com/papapitufo/core")
+			credentials {
+				username = project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
+				password = project.findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
+			}
+		}
+	}
 }

@@ -1,5 +1,6 @@
 package com.control.core.service;
 
+import com.control.core.autoconfigure.CoreAuthProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -12,19 +13,37 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
     
-    @Value("${app.mail.from:noreply@coreapp.com}")
-    private String fromEmail;
+    @Autowired
+    private CoreAuthProperties coreAuthProperties;
     
-    @Value("${app.base-url:http://localhost:8080}")
-    private String baseUrl;
+    // Fallback to legacy property names for backward compatibility
+    @Value("${app.mail.from:#{null}}")
+    private String legacyFromEmail;
+    
+    @Value("${app.base-url:#{null}}")
+    private String legacyBaseUrl;
+    
+    private String getFromEmail() {
+        if (legacyFromEmail != null) {
+            return legacyFromEmail;
+        }
+        return coreAuthProperties.getEmail().getFromAddress();
+    }
+    
+    private String getBaseUrl() {
+        if (legacyBaseUrl != null) {
+            return legacyBaseUrl;
+        }
+        return coreAuthProperties.getBaseUrl();
+    }
     
     public void sendPasswordResetEmail(String toEmail, String username, String resetToken) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
+        message.setFrom(getFromEmail());
         message.setTo(toEmail);
         message.setSubject("Password Reset Request - Core Application");
         
-        String resetUrl = baseUrl + "/reset-password?token=" + resetToken;
+        String resetUrl = getBaseUrl() + "/reset-password?token=" + resetToken;
         
         String emailBody = String.format(
             "Hello %s,\n\n" +
@@ -49,7 +68,7 @@ public class EmailService {
     
     public void sendPasswordChangeConfirmation(String toEmail, String username) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
+        message.setFrom(getFromEmail());
         message.setTo(toEmail);
         message.setSubject("Password Changed Successfully - Core Application");
         
