@@ -1,6 +1,8 @@
 package com.control.core.autoconfigure;
 
 import com.control.core.security.CustomAuthenticationSuccessHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -34,6 +36,8 @@ import org.springframework.security.web.SecurityFilterChain;
 @EntityScan(basePackages = "com.control.core.model")
 @ComponentScan(basePackages = "com.control.core")
 public class CoreAuthAutoConfiguration {
+
+    private static final Logger logger = LoggerFactory.getLogger(CoreAuthAutoConfiguration.class);
 
     /**
      * Provides a default password encoder if none is defined

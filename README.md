@@ -2,7 +2,7 @@
 
 A comprehensive Spring Boot Starter for authentication and user management with a beautiful Material UI frontend.
 
-[![Version](https://img.shields.io/badge/version-1.0.7-blue.svg)](https://github.com/papapitufo/core/packages)
+[![Version](https://img.shields.io/badge/version-1.0.13-blue.svg)](https://github.com/papapitufo/core/packages)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.3-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://openjdk.java.net/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -747,7 +747,154 @@ mvn dependency:tree | grep spring-boot-starter
 
 If you see version 2.x.x, you need to upgrade to Spring Boot 3.x before using this starter.
 
-## 🔧 Development
+## �️ Route Security Configuration FAQ
+
+### How do I make routes public (accessible without authentication)?
+
+Routes that are **not** in the starter's security matcher are automatically public. The starter only secures these specific paths:
+- `/login`, `/logout`, `/signup`, `/forgot-password`, `/reset-password`
+- `/admin/**` 
+- `/dashboard`
+- `/api/**`
+
+**Example: Creating public routes**
+```java
+@Controller
+public class PublicController {
+    
+    @GetMapping("/pictures")
+    public String pictures() {
+        return "pictures"; // Automatically public - no authentication required
+    }
+    
+    @GetMapping("/about")
+    public String about() {
+        return "about"; // Automatically public
+    }
+    
+    @GetMapping("/gallery/{id}")
+    public String galleryItem(@PathVariable String id, Model model) {
+        model.addAttribute("imageId", id);
+        return "gallery-item"; // Automatically public
+    }
+}
+```
+
+### How do I secure routes behind authentication?
+
+For routes you want to protect, create a security configuration in your consumer application:
+
+**Option 1: Simple Authentication (Any logged-in user)**
+```java
+@Configuration
+@Order(2) // Lower priority than the starter's @Order(1)
+public class AppSecurityConfig {
+    
+    @Bean
+    public SecurityFilterChain appSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+            .securityMatcher("/protected/**", "/private/**", "/user/**")
+            .authorizeHttpRequests(authz -> authz
+                .anyRequest().authenticated() // Require authentication
+            )
+            .build();
+    }
+}
+```
+
+**Option 2: Role-Based Access Control**
+```java
+@Configuration
+@Order(2)
+public class AppSecurityConfig {
+    
+    @Bean
+    public SecurityFilterChain appSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+            .securityMatcher("/protected/**", "/admin-stuff/**", "/user/**")
+            .authorizeHttpRequests(authz -> authz
+                .requestMatchers("/admin-stuff/**").hasRole("ADMIN")
+                .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
+                .requestMatchers("/protected/**").authenticated()
+                .anyRequest().authenticated()
+            )
+            .build();
+    }
+}
+```
+
+**Option 3: Method-Level Security**
+```java
+@SpringBootApplication
+@EnableMethodSecurity(prePostEnabled = true)
+public class YourApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(YourApplication.class, args);
+    }
+}
+
+@Controller
+public class SecureController {
+    
+    @GetMapping("/protected/photos")
+    @PreAuthorize("isAuthenticated()")
+    public String protectedPhotos() {
+        return "protected-photos";
+    }
+    
+    @GetMapping("/admin/settings")
+    @PreAuthorize("hasRole('ADMIN')")
+    public String adminSettings() {
+        return "admin-settings";
+    }
+    
+    @GetMapping("/user/profile")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    public String userProfile() {
+        return "user-profile";
+    }
+}
+```
+
+### What happens if I don't configure security for my routes?
+
+- **Routes NOT in the starter's security matcher**: Completely public, no authentication required
+- **Routes in the starter's security matcher**: Protected by the starter's security configuration
+
+**Starter's Protected Paths:**
+```java
+// These paths are automatically secured by the starter:
+"/login", "/logout", "/signup", "/forgot-password", "/reset-password", 
+"/admin/**", "/dashboard", "/api/**"
+
+// All other paths are public by default
+```
+
+### Can I override the starter's security configuration?
+
+Yes, you have several options:
+
+1. **Disable auto-configuration** and define your own:
+```properties
+core.auth.security.auto-configure=false
+```
+
+2. **Use different security matcher patterns** in your own configuration (recommended approach above)
+
+3. **Use higher priority** security filter chains with `@Order(0)` or `@Order(1)`
+
+### How do I check what security is applied to my routes?
+
+Enable debug logging to see security decisions:
+
+```properties
+logging.level.org.springframework.security=DEBUG
+logging.level.com.control.core=DEBUG
+```
+
+Or check your application's security filter chains at startup - they will be logged during application boot.
+
+## �🔧 Development
 
 ### Building from Source
 
@@ -1064,7 +1211,23 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📝 Version History
 
-### v1.0.9 (Latest)
+### v1.0.13 (Latest)
+- **Fixed**: Excluded `index.html` template from library JAR to prevent conflicts with consumer applications
+- **Improved**: Consumer applications now have complete control over root route handling
+- **Enhanced**: Better separation between starter templates and consumer application templates
+- **Added**: Comprehensive route security configuration FAQ section
+
+### v1.0.12
+- **Fixed**: Enhanced logout URL filtering in `CustomAuthenticationSuccessHandler`
+- **Improved**: Prevents redirects to `/logout?continue` and other logout-related URLs after successful login
+- **Enhanced**: More robust URL filtering for edge cases in authentication redirect flow
+
+### v1.0.11
+- **Fixed**: Removed root path mapping (`/`) from WebController to allow consumer applications to define their own root routes
+- **Improved**: Consumer applications can now properly handle root path without interference from the starter
+- **Enhanced**: Better separation of concerns between starter routes and consumer routes
+
+### v1.0.10
 - **Fixed**: Chrome DevTools and browser-specific URL interference with authentication redirects
 - **Added**: Custom `AuthenticationSuccessHandler` that filters out invalid redirect URLs
 - **Improved**: Better handling of saved requests and redirect URL validation
