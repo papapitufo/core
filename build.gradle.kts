@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.control"
-version = "1.0.9"
+version = "1.0.13"
 description = "Core Authentication and User Management Spring Boot Starter"
 
 java {
@@ -75,6 +75,8 @@ tasks.getByName<Jar>("jar") {
 	exclude("application.properties")
 	exclude("data.sql")
 	exclude("application-*.properties")
+	// Exclude index.html as consumer apps should handle their own root routes
+	exclude("templates/index.html")
 }
 
 publishing {

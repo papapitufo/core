@@ -3,6 +3,8 @@ package com.control.core.security;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
@@ -14,11 +16,14 @@ import java.io.IOException;
 
 public class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
     
+    private static final Logger logger = LoggerFactory.getLogger(CustomAuthenticationSuccessHandler.class);
+    
     private final String defaultTargetUrl;
     private final RequestCache requestCache = new HttpSessionRequestCache();
     
     public CustomAuthenticationSuccessHandler(String defaultTargetUrl) {
         this.defaultTargetUrl = defaultTargetUrl;
+        logger.info("CustomAuthenticationSuccessHandler initialized with defaultTargetUrl: {}", defaultTargetUrl);
     }
     
     @Override
@@ -27,6 +32,9 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
                                       Authentication authentication) throws IOException, ServletException {
         
         String targetUrl = determineTargetUrl(request, response);
+        
+        logger.info("Authentication successful for user: {}. Redirecting to: {}", 
+                   authentication.getName(), targetUrl);
         
         // Clear the authentication attributes
         clearAuthenticationAttributes(request);
@@ -41,15 +49,20 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         
         if (savedRequest != null) {
             String targetUrl = savedRequest.getRedirectUrl();
+            logger.debug("Found saved request with URL: {}", targetUrl);
             
             // Filter out Chrome DevTools and other browser-specific URLs
             if (isValidRedirectUrl(targetUrl)) {
                 requestCache.removeRequest(request, response);
+                logger.info("Using saved request URL: {}", targetUrl);
                 return targetUrl;
+            } else {
+                logger.warn("Filtered out invalid saved request URL: {}", targetUrl);
             }
         }
         
         // No saved request or invalid URL, use default
+        logger.info("Using default target URL: {}", defaultTargetUrl);
         return defaultTargetUrl;
     }
     
@@ -64,7 +77,9 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
             "chrome-extension:",
             "devtools",
             "favicon.ico",
-            "robots.txt"
+            "robots.txt",
+            "/logout",  // Never redirect to logout after successful login
+            "logout"    // Also catch relative logout URLs
         };
         
         String lowerUrl = url.toLowerCase();

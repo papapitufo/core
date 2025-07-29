@@ -21,10 +21,11 @@ public class WebController {
     @Autowired
     private PasswordResetService passwordResetService;
     
-    @GetMapping("/")
-    public String index() {
-        return "redirect:/dashboard";
-    }
+    // Removed root mapping to allow consumer applications to define their own root route
+    // @GetMapping("/")
+    // public String index() {
+    //     return "redirect:/dashboard";
+    // }
     
     @GetMapping("/login")
     public String login(@RequestParam(value = "error", required = false) String error,
