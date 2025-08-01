@@ -32,7 +32,62 @@ All endpoints require HTTP Basic Authentication.
 - `PUT /api/users/{id}/password` - Change user password (Admin or self)
 
 ### Public Endpoints
-- `GET /actuator/**` - Application monitoring endpoints
+- `GET /actuator/**` - Application monitoring endpoints (configured separately)
+
+## System Monitoring with Spring Boot Actuator
+
+The application includes a comprehensive System Monitoring dashboard accessible through the admin interface.
+
+### Accessing the Monitoring Dashboard
+
+1. **Login as admin** (username: `admin`, password: `admin123`)
+2. **Navigate to the dashboard** at `/dashboard`
+3. **Click "System Monitoring"** in the admin section
+4. **View comprehensive system metrics** and health information
+
+### Available Monitoring Features
+
+- **Application Health**: Overall system health and component status
+- **Application Info**: Build information, version, and metadata
+- **Environment Properties**: Configuration and environment variables
+- **Metrics**: Performance metrics, JVM stats, and request statistics
+- **Configuration Properties**: All application configuration values
+- **Spring Beans**: Bean registry and dependency information
+- **Request Mappings**: All HTTP endpoints and their handlers
+- **Thread Dump**: JVM thread analysis for performance troubleshooting
+- **Log Levels**: Runtime log level viewing and modification
+
+### Actuator Configuration for Consumer Applications
+
+If you're using this as a starter dependency in your own application, you need to:
+
+1. **Add Actuator Dependency**:
+   ```kotlin
+   // Gradle
+   implementation("org.springframework.boot:spring-boot-starter-actuator")
+   ```
+
+2. **Configure Actuator Endpoints** in your `application.properties`:
+   ```properties
+   # Expose actuator endpoints
+   management.endpoints.web.exposure.include=*
+   management.endpoint.health.show-details=when-authorized
+   
+   # Application information for monitoring dashboard
+   info.app.name=Your Application Name
+   info.app.description=Your application description
+   info.app.version=1.0.0
+   info.app.encoding=@project.build.sourceEncoding@
+   info.app.java.version=@java.version@
+   ```
+
+3. **Restart your application** to enable actuator endpoints
+
+### Security
+
+- Actuator endpoints are restricted to admin users only
+- Detailed health information is shown only to authorized users
+- All monitoring data is protected by the same authentication system
 
 ## Database Configuration
 

@@ -15,19 +15,18 @@ java {
 
 repositories {
     mavenCentral()
-    flatDir {
-        dirs("libs")
-    }
 }
 
 dependencies {
-    implementation("core:core:1.0.0")
+    implementation(project(":"))
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.springframework.boot:spring-boot-starter-mail")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
     implementation("com.h2database:h2")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
