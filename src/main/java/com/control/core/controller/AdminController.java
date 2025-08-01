@@ -174,4 +174,9 @@ public class AdminController {
             return "user-history :: userHistory";
         }
     }
+    
+    @GetMapping("/actuator")
+    public String actuatorDashboard() {
+        return "actuator-dashboard";
+    }
 }

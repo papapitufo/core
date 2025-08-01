@@ -242,18 +242,6 @@
         </div>
         
         <div class="cards-grid">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-icon">
-                        <span class="material-icons">person</span>
-                    </div>
-                    <h3 class="card-title">Profile Management</h3>
-                </div>
-                <div class="card-content">
-                    Update your personal information, change your password, and manage your account settings.
-                </div>
-                <a href="#" class="btn btn-primary">Manage Profile</a>
-            </div>
             
             <div class="card" sec:authorize="hasRole('ADMIN')">
                 <div class="card-header">
@@ -266,6 +254,19 @@
                     Create, activate, deactivate users and manage user accounts. View user history and activity.
                 </div>
                 <a href="/admin/users" class="btn btn-primary">Manage Users</a>
+            </div>
+            
+            <div class="card" sec:authorize="hasRole('ADMIN')">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <span class="material-icons">analytics</span>
+                    </div>
+                    <h3 class="card-title">System Monitoring</h3>
+                </div>
+                <div class="card-content">
+                    Monitor application health, metrics, environment info, and system performance in real-time.
+                </div>
+                <a href="/admin/actuator" class="btn btn-primary">View System Status</a>
             </div>
             
             <div class="card">

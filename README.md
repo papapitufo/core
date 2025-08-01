@@ -2,7 +2,7 @@
 
 A comprehensive Spring Boot Starter for authentication and user management with a beautiful Material UI frontend.
 
-[![Version](https://img.shields.io/badge/version-1.0.13-blue.svg)](https://github.com/papapitufo/core/packages)
+[![Version](https://img.shields.io/badge/version-1.0.14-blue.svg)](https://github.com/papapitufo/core/packages)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.3-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://openjdk.java.net/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -64,7 +64,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.control:core-auth-starter:1.0.3")
+    implementation("com.control:core-auth-starter:1.0.14")
     runtimeOnly("org.postgresql:postgresql") // or your preferred database
     
     // Required for email functionality (password reset emails)
@@ -86,7 +86,7 @@ dependencies {
     <dependency>
         <groupId>com.control</groupId>
         <artifactId>core-auth-starter</artifactId>
-        <version>1.0.4</version>
+        <version>1.0.14</version>
     </dependency>
     <!-- Required for email functionality (password reset emails) -->
     <dependency>
@@ -106,7 +106,7 @@ If you want to use the password reset feature, you must add the mail starter dep
 ```kotlin
 // Gradle
 dependencies {
-    implementation("com.control:core-auth-starter:1.0.3")
+    implementation("com.control:core-auth-starter:1.0.14")
     implementation("org.springframework.boot:spring-boot-starter-mail") // Required for email
     runtimeOnly("org.postgresql:postgresql") // or your preferred database
 }
@@ -118,7 +118,7 @@ dependencies {
     <dependency>
         <groupId>com.control</groupId>
         <artifactId>core-auth-starter</artifactId>
-        <version>1.0.2</version>
+        <version>1.0.14</version>
     </dependency>
     <!-- Required for email functionality -->
     <dependency>
@@ -134,7 +134,7 @@ If you don't need password reset emails, you can skip the mail dependency:
 ```kotlin
 // Gradle - Basic auth without email
 dependencies {
-    implementation("com.control:core-auth-starter:1.0.3")
+    implementation("com.control:core-auth-starter:1.0.14")
     runtimeOnly("org.postgresql:postgresql") // or your preferred database
 }
 ```
@@ -204,9 +204,279 @@ That's it! Your application now includes:
 | `/signup` | User registration | Public | Validation, duplicate prevention |
 | `/dashboard` | User dashboard | Authenticated | Profile info, last login |
 | `/admin/users` | User management | Admin only | CRUD operations, search, activate/deactivate |
+| `/admin/actuator` | System monitoring | Admin only | Spring Boot Actuator dashboard |
 | `/forgot-password` | Password reset request | Public | Email-based token generation |
 | `/reset-password` | Password reset form | Public | Secure token validation |
 | `/logout` | User logout | Authenticated | Session cleanup |
+
+## 📊 System Monitoring with Spring Boot Actuator
+
+The Core Auth Starter includes a comprehensive System Monitoring dashboard that integrates with Spring Boot Actuator endpoints. The dashboard provides real-time monitoring capabilities for production applications.
+
+### 🔧 Enabling Actuator in Your Application
+
+**Step 1: Add Actuator Dependency**
+
+```kotlin
+// Gradle (build.gradle.kts)
+dependencies {
+    implementation("com.control:core-auth-starter:1.0.14")
+    implementation("org.springframework.boot:spring-boot-starter-actuator") // Add this
+    // ... other dependencies
+}
+```
+
+```xml
+<!-- Maven (pom.xml) -->
+<dependencies>
+    <dependency>
+        <groupId>com.control</groupId>
+        <artifactId>core-auth-starter</artifactId>
+        <version>1.0.14</version>
+    </dependency>
+    <!-- Add Spring Boot Actuator -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+</dependencies>
+```
+
+**Step 2: Configure Actuator Endpoints**
+
+Add to your `application.properties`:
+
+```properties
+# Actuator Configuration
+management.endpoints.web.exposure.include=*
+management.endpoint.health.show-details=when-authorized
+management.endpoint.info.enabled=true
+
+# Application Information (displayed in monitoring dashboard)
+info.app.name=Your Application Name
+info.app.description=Your application description
+info.app.version=1.0.0
+info.app.encoding=@project.build.sourceEncoding@
+info.app.java.version=@java.version@
+
+# Optional: Customize management port (if different from main app port)
+# management.server.port=8081
+```
+
+**Step 3: Access the Monitoring Dashboard**
+
+After adding actuator and restarting your application:
+
+1. **Login as admin** to your application
+2. **Navigate to the dashboard** (`/dashboard`)
+3. **Click "System Monitoring"** card in the admin section
+4. **Access comprehensive monitoring** with real-time data
+
+### 🎛️ Monitoring Dashboard Features
+
+The System Monitoring dashboard (`/admin/actuator`) provides:
+
+| Monitoring Card | Endpoint | Description |
+|----------------|----------|-------------|
+| **Application Health** | `/actuator/health` | Overall application health status and component checks |
+| **Application Info** | `/actuator/info` | Application metadata, version, and build information |
+| **Environment Properties** | `/actuator/env` | Configuration properties and environment variables |
+| **Application Metrics** | `/actuator/metrics` | Performance metrics, JVM stats, and custom metrics |
+| **Configuration Properties** | `/actuator/configprops` | All configuration properties and their values |
+| **Spring Beans** | `/actuator/beans` | All Spring beans and their dependencies |
+| **Request Mappings** | `/actuator/mappings` | All HTTP endpoints and their handlers |
+| **Thread Dump** | `/actuator/threaddump` | JVM thread information for performance analysis |
+| **Log Levels** | `/actuator/loggers` | View and modify logging levels at runtime |
+
+### 🔒 Security Configuration for Actuator
+
+By default, the Core Auth Starter secures actuator endpoints to admin users only. You can customize this:
+
+**Option 1: Admin-Only Access (Default)**
+```java
+// No configuration needed - this is the default behavior
+// Actuator endpoints at /actuator/* require ADMIN role
+```
+
+**Option 2: Custom Actuator Security**
+```java
+@Configuration
+@Order(1) // Higher priority
+public class ActuatorSecurityConfig {
+    
+    @Bean
+    public SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+            .securityMatcher("/actuator/**")
+            .authorizeHttpRequests(authz -> authz
+                .requestMatchers("/actuator/health", "/actuator/info").permitAll() // Public
+                .requestMatchers("/actuator/**").hasRole("ADMIN") // Admin only
+            )
+            .httpBasic(Customizer.withDefaults()) // Enable basic auth for monitoring tools
+            .build();
+    }
+}
+```
+
+**Option 3: Monitoring Tool Integration**
+```properties
+# For external monitoring tools (Prometheus, etc.)
+management.endpoints.web.exposure.include=health,info,metrics,prometheus
+management.endpoint.health.show-details=always
+management.endpoint.prometheus.enabled=true
+```
+
+### 📈 Production Monitoring Setup
+
+**Recommended Production Configuration:**
+
+```properties
+# Security: Only expose necessary endpoints
+management.endpoints.web.exposure.include=health,info,metrics,loggers
+
+# Health endpoint configuration
+management.endpoint.health.show-details=when-authorized
+management.endpoint.health.probes.enabled=true
+management.health.diskspace.enabled=true
+management.health.db.enabled=true
+
+# Info endpoint with build information
+management.info.build.enabled=true
+management.info.env.enabled=true
+management.info.git.enabled=true
+
+# Application information
+info.app.name=${spring.application.name:Your App}
+info.app.description=Production application with Core Auth
+info.app.version=@project.version@
+info.app.environment=${spring.profiles.active:production}
+
+# Optional: Separate management port for security
+management.server.port=8081
+management.server.address=127.0.0.1
+
+# Metrics configuration
+management.metrics.distribution.percentiles-histogram.http.server.requests=true
+management.metrics.distribution.percentiles.http.server.requests=0.5,0.95,0.99
+management.metrics.tags.application=${spring.application.name}
+```
+
+### 🚨 Troubleshooting Actuator
+
+**Problem: "Whitelabel Error Page" when clicking System Monitoring**
+
+This means actuator endpoints aren't exposed. Add to your `application.properties`:
+
+```properties
+# Expose actuator endpoints
+management.endpoints.web.exposure.include=*
+```
+
+**Problem: Empty or missing application info**
+
+Add application metadata to your `application.properties`:
+
+```properties
+# Application information for monitoring dashboard
+info.app.name=Your Application Name
+info.app.description=Your application description
+info.app.version=1.0.0
+```
+
+**Problem: Health endpoint shows limited information**
+
+Configure health details visibility:
+
+```properties
+# Show detailed health information for authorized users
+management.endpoint.health.show-details=when-authorized
+# Or for all users (not recommended for production)
+# management.endpoint.health.show-details=always
+```
+
+**Problem: Actuator endpoints return 404**
+
+Ensure you've added the actuator dependency:
+
+```kotlin
+// Gradle
+implementation("org.springframework.boot:spring-boot-starter-actuator")
+```
+
+```xml
+<!-- Maven -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+```
+
+### 💡 Advanced Actuator Features
+
+**Custom Health Indicators:**
+```java
+@Component
+public class CustomHealthIndicator implements HealthIndicator {
+    
+    @Override
+    public Health health() {
+        // Custom health check logic
+        boolean isHealthy = checkExternalService();
+        
+        if (isHealthy) {
+            return Health.up()
+                .withDetail("service", "Available")
+                .withDetail("checked-at", Instant.now())
+                .build();
+        } else {
+            return Health.down()
+                .withDetail("service", "Unavailable")
+                .withDetail("error", "Connection timeout")
+                .build();
+        }
+    }
+}
+```
+
+**Custom Application Info:**
+```java
+@Component
+public class CustomInfoContributor implements InfoContributor {
+    
+    @Override
+    public void contribute(Info.Builder builder) {
+        builder.withDetail("app", Map.of(
+            "name", "My Application",
+            "version", "1.0.0",
+            "environment", "production",
+            "startup-time", Instant.now()
+        ));
+    }
+}
+```
+
+**Custom Metrics:**
+```java
+@RestController
+public class MetricsController {
+    
+    private final MeterRegistry meterRegistry;
+    private final Counter customCounter;
+    
+    public MetricsController(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+        this.customCounter = Counter.builder("custom.requests")
+            .description("Custom request counter")
+            .register(meterRegistry);
+    }
+    
+    @GetMapping("/api/data")
+    public ResponseEntity<String> getData() {
+        customCounter.increment(); // Track custom metric
+        return ResponseEntity.ok("Data response");
+    }
+}
+```
 
 ## ⚙️ Configuration Options
 
@@ -1211,7 +1481,15 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📝 Version History
 
-### v1.0.13 (Latest)
+### v1.0.14 (Latest)
+- **Added**: Comprehensive System Monitoring dashboard with Spring Boot Actuator integration
+- **Enhanced**: Complete actuator documentation with setup instructions for consumer applications
+- **Added**: Material Design monitoring dashboard with 9 monitoring cards (Health, Info, Metrics, Environment, etc.)
+- **Improved**: Detailed troubleshooting guide for actuator configuration issues
+- **Added**: Production-ready actuator configuration examples and security best practices
+- **Enhanced**: USER_MANAGEMENT_README.md with actuator setup instructions
+
+### v1.0.13
 - **Fixed**: Excluded `index.html` template from library JAR to prevent conflicts with consumer applications
 - **Improved**: Consumer applications now have complete control over root route handling
 - **Enhanced**: Better separation between starter templates and consumer application templates

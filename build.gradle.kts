@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.control"
-version = "1.0.13"
+version = "1.0.14"
 description = "Core Authentication and User Management Spring Boot Starter"
 
 java {
