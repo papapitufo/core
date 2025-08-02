@@ -61,7 +61,7 @@ public class CoreAuthAutoConfiguration {
         System.out.println("🔧 CoreAuth: Configuring security with defaultSuccessUrl: " + properties.getDefaultSuccessUrl());
         
         return http
-            .securityMatcher("/login", "/logout", "/signup", "/forgot-password", "/reset-password", "/admin/**", "/dashboard", "/api/**")
+            .securityMatcher("/login", "/logout", "/signup", "/forgot-password", "/reset-password", "/admin/**", "/dashboard")
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/login", "/signup", "/forgot-password", "/reset-password", "/css/**", "/js/**", "/images/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")

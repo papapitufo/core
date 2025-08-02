@@ -1,13 +1,12 @@
 plugins {
 	java
 	`java-library`
-	id("org.springframework.boot") version "3.5.3"
 	id("io.spring.dependency-management") version "1.1.7"
 	`maven-publish`
 }
 
 group = "com.control"
-version = "1.0.14"
+version = "1.0.15"
 description = "Core Authentication and User Management Spring Boot Starter"
 
 java {
@@ -20,6 +19,12 @@ java {
 
 repositories {
 	mavenCentral()
+}
+
+dependencyManagement {
+	imports {
+		mavenBom("org.springframework.boot:spring-boot-dependencies:3.5.3")
+	}
 }
 
 dependencies {
@@ -35,7 +40,7 @@ dependencies {
 	compileOnly("org.springframework.boot:spring-boot-starter-mail")
 	
 	// Configuration processor for IDE support
-	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+	compileOnly("org.springframework.boot:spring-boot-configuration-processor")
 	
 	// Optional dependencies - let consuming apps choose their database
 	compileOnly("org.postgresql:postgresql")
@@ -59,15 +64,8 @@ tasks.withType<JavaCompile> {
 	options.compilerArgs.add("-parameters")
 }
 
-// Disable the bootJar task since this is a library, not an executable application
-tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
-	enabled = false
-}
-
-// Enable the plain jar task
-tasks.getByName<Jar>("jar") {
-	enabled = true
-	archiveClassifier = ""
+// Configure the plain jar task
+tasks.withType<Jar> {
 	// Exclude the main application class since this is a library
 	exclude("**/CoreApplication.class")
 	exclude("**/CoreApplication*.class")
