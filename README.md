@@ -1025,7 +1025,6 @@ Routes that are **not** in the starter's security matcher are automatically publ
 - `/login`, `/logout`, `/signup`, `/forgot-password`, `/reset-password`
 - `/admin/**` 
 - `/dashboard`
-- `/api/**`
 
 **Example: Creating public routes**
 ```java
@@ -1135,9 +1134,9 @@ public class SecureController {
 ```java
 // These paths are automatically secured by the starter:
 "/login", "/logout", "/signup", "/forgot-password", "/reset-password", 
-"/admin/**", "/dashboard", "/api/**"
+"/admin/**", "/dashboard"
 
-// All other paths are public by default
+// All other paths (including /api/**) are public by default
 ```
 
 ### Can I override the starter's security configuration?
