@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Metrics - Core Application</title>
+    
+    <!-- Material UI CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Custom CSS for Material UI-like styling -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            color: #212121;
+            line-height: 1.5;
+        }
+        
+        .header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #1976d2;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            color: #666;
+        }
+        
+        .breadcrumb a {
+            color: #1976d2;
+            text-decoration: none;
+        }
+        
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
+            color: white;
+            border-radius: 4px;
+            padding: 32px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .page-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .metric-card {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 24px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        
+        .metric-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .metric-icon {
+            background: #fff3e0;
+            color: #f57c00;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+        }
+        
+        .metric-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #212121;
+        }
+        
+        .metric-name {
+            color: #666;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            background: #f5f5f5;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            word-break: break-all;
+        }
+        
+        .metric-value {
+            background: #f8f9fa;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 8px 0;
+        }
+        
+        .metric-measurement {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .metric-measurement:last-child {
+            border-bottom: none;
+        }
+        
+        .measurement-label {
+            font-size: 12px;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .measurement-value {
+            font-size: 14px;
+            color: #212121;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+        
+        .metric-unit {
+            font-size: 10px;
+            color: #999;
+            margin-left: 4px;
+        }
+        
+        .metric-description {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+        
+        .metric-error {
+            color: #c62828;
+            font-size: 12px;
+            font-style: italic;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Roboto', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            color: #1976d2;
+            border: 1px solid #1976d2;
+        }
+        
+        .btn-outline:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .btn-primary {
+            background-color: #1976d2;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1565c0;
+            box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+        
+        .material-icons {
+            font-size: 24px;
+        }
+        
+        .refresh-info {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 16px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            border-radius: 4px;
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .search-box {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: 'Roboto', sans-serif;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #1976d2;
+            box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
+        }
+        
+        .empty-state {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 48px;
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1 class="header-title">Core Application</h1>
+        <div class="header-actions">
+            <div class="user-info">
+                <span class="material-icons">person</span>
+                <span sec:authentication="name">User</span>
+            </div>
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <button type="submit" class="btn btn-outline">
+                    <span class="material-icons" style="font-size: 16px; margin-right: 4px;">logout</span>
+                    Logout
+                </button>
+            </form>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="/dashboard">Dashboard</a>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <a href="/admin/actuator">System Monitoring</a>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>Application Metrics</span>
+        </div>
+        
+        <div class="page-header">
+            <h2 class="page-title">Application Metrics</h2>
+            <p class="page-subtitle">Performance metrics, JVM statistics, and application measurements</p>
+        </div>
+        
+        <!-- Error message if data fetch failed -->
+        <div th:if="${error}" class="error-message">
+            <span class="material-icons" style="margin-right: 8px;">error</span>
+            <span th:text="${error}">Error message</span>
+        </div>
+        
+        <!-- Search box -->
+        <div th:if="${metricsData?.names}" class="search-box">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search metrics..." onkeyup="filterMetrics()">
+        </div>
+        
+        <!-- Metrics grid -->
+        <div th:if="${metricsData?.names}" class="metrics-grid" id="metricsGrid">
+            <div th:each="metricName : ${metricsData.names}" class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-icon">
+                        <span class="material-icons" th:switch="${metricName.substring(0, metricName.indexOf('.') != -1 ? metricName.indexOf('.') : metricName.length())}">
+                            <span th:case="'jvm'">memory</span>
+                            <span th:case="'http'">http</span>
+                            <span th:case="'system'">computer</span>
+                            <span th:case="'process'">settings</span>
+                            <span th:case="'tomcat'">web</span>
+                            <span th:case="'hikaricp'">storage</span>
+                            <span th:case="*">analytics</span>
+                        </span>
+                    </div>
+                    <div>
+                        <h3 class="metric-title" th:text="${#strings.capitalize(metricName.split('\.')[0])} + ' Metric'">Metric</h3>
+                    </div>
+                </div>
+                <div class="metric-name" th:text="${metricName}">metric.name</div>
+                
+                <!-- Display metric values if available -->
+                <div th:if="${metricValues != null and metricValues.containsKey(metricName)}" class="metric-value">
+                    <div th:with="metricDetail=${metricValues.get(metricName)}">
+                        <!-- Show error if metric failed to load -->
+                        <div th:if="${metricDetail.containsKey('error')}" class="metric-error" th:text="${metricDetail.get('error')}">Error loading metric</div>
+                        
+                        <!-- Show metric description and measurements -->
+                        <div th:unless="${metricDetail.containsKey('error')}">
+                            <div th:if="${metricDetail.description}" class="metric-description" th:text="${metricDetail.description}">Metric description</div>
+                            
+                            <!-- Display measurements -->
+                            <div th:if="${metricDetail.measurements}" th:each="measurement : ${metricDetail.measurements}" class="metric-measurement">
+                                <span class="measurement-label" th:text="${measurement.statistic}">Statistic</span>
+                                <span class="measurement-value">
+                                    <span th:text="${#numbers.formatDecimal(measurement.value, 0, 2)}">0.00</span>
+                                    <span th:if="${metricDetail.baseUnit}" class="metric-unit" th:text="${metricDetail.baseUnit}">unit</span>
+                                </span>
+                            </div>
+                            
+                            <!-- If no measurements, show available tags -->
+                            <div th:if="${not metricDetail.measurements and metricDetail.availableTags}" class="metric-measurement">
+                                <span class="measurement-label">Available Tags</span>
+                                <span class="measurement-value" th:text="${#lists.size(metricDetail.availableTags)} + ' tags'">0 tags</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Fallback if no metric values loaded -->
+                <div th:unless="${metricValues != null and metricValues.containsKey(metricName)}" class="metric-value">
+                    <div class="metric-error">Value not loaded</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Empty state if no metrics available -->
+        <div th:if="${metricsData == null or metricsData.names == null or #lists.isEmpty(metricsData.names)}" class="empty-state">
+            <span class="material-icons" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">analytics</span>
+            <h3>No Metrics Available</h3>
+            <p>Application metrics are not available at this time.</p>
+        </div>
+        
+        <!-- Action buttons -->
+        <div style="text-align: center; margin-bottom: 24px;">
+            <a href="/admin/actuator" class="btn btn-outline" style="margin-right: 16px;">
+                <span class="material-icons" style="font-size: 16px; margin-right: 4px;">arrow_back</span>
+                Back to Monitoring
+            </a>
+            <button onclick="location.reload()" class="btn btn-primary">
+                <span class="material-icons" style="font-size: 16px; margin-right: 4px;">refresh</span>
+                Refresh
+            </button>
+        </div>
+        
+        <!-- Refresh info -->
+        <div class="refresh-info">
+            <span class="material-icons" style="font-size: 14px; margin-right: 4px;">access_time</span>
+            Last updated: <span th:text="${lastUpdated != null ? #temporals.format(lastUpdated, 'yyyy-MM-dd HH:mm:ss') : 'Unknown'}">Unknown</span>
+        </div>
+    </div>
+    
+    <script>
+        function filterMetrics() {
+            const searchInput = document.getElementById('searchInput');
+            const filter = searchInput.value.toLowerCase();
+            const metricsGrid = document.getElementById('metricsGrid');
+            const metricCards = metricsGrid.getElementsByClassName('metric-card');
+            
+            for (let i = 0; i < metricCards.length; i++) {
+                const metricName = metricCards[i].querySelector('.metric-name');
+                if (metricName) {
+                    const textValue = metricName.textContent || metricName.innerText;
+                    if (textValue.toLowerCase().indexOf(filter) > -1) {
+                        metricCards[i].style.display = '';
+                    } else {
+                        metricCards[i].style.display = 'none';
+                    }
+                }
+            }
+        }
+        
+        // Auto-refresh every 30 seconds
+        setTimeout(() => {
+            location.reload();
+        }, 30000);
+    </script>
+</body>
+</html>

@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.control"
-version = "1.0.15"
+version = "1.0.16"
 description = "Core Authentication and User Management Spring Boot Starter"
 
 java {
@@ -53,6 +53,7 @@ dependencies {
 	testImplementation("org.springframework.security:spring-security-test")
 	testImplementation("com.h2database:h2")
 	testImplementation("org.springframework.boot:spring-boot-starter-mail") // For testing
+	testImplementation("org.springframework.boot:spring-boot-starter-actuator") // For testing AdminController
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

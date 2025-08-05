@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Health - Core Application</title>
+    
+    <!-- Material UI CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Custom CSS for Material UI-like styling -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            color: #212121;
+            line-height: 1.5;
+        }
+        
+        .header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #1976d2;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            color: #666;
+        }
+        
+        .breadcrumb a {
+            color: #1976d2;
+            text-decoration: none;
+        }
+        
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+            color: white;
+            border-radius: 4px;
+            padding: 32px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .page-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .overall-status {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+        
+        .status-up {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .status-down {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .component-card {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 24px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .component-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        
+        .component-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        
+        .component-title-section {
+            display: flex;
+            align-items: center;
+        }
+        
+        .component-icon {
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+        }
+        
+        .component-icon.up {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .component-icon.down {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .component-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #212121;
+        }
+        
+        .component-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .component-status.up {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .component-status.down {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .component-details {
+            color: #666;
+            margin-top: 16px;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            gap: 16px;
+        }
+        
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: 500;
+            color: #666;
+            flex-shrink: 0;
+            min-width: 80px;
+        }
+        
+        .detail-value {
+            color: #212121;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            text-align: right;
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Roboto', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            color: #1976d2;
+            border: 1px solid #1976d2;
+        }
+        
+        .btn-outline:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .btn-primary {
+            background-color: #1976d2;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1565c0;
+            box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
+        }
+        
+        .material-icons {
+            font-size: 24px;
+        }
+        
+        .refresh-info {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 16px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            border-radius: 4px;
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .bytes-value {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .error-detail-value {
+            color: #c62828;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1 class="header-title">Core Application</h1>
+        <div class="header-actions">
+            <div class="user-info">
+                <span class="material-icons">person</span>
+                <span sec:authentication="name">User</span>
+            </div>
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <button type="submit" class="btn btn-outline">
+                    <span class="material-icons" style="font-size: 16px; margin-right: 4px;">logout</span>
+                    Logout
+                </button>
+            </form>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="/dashboard">Dashboard</a>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <a href="/admin/actuator">System Monitoring</a>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>Application Health</span>
+        </div>
+        
+        <div class="page-header">
+            <h2 class="page-title">Application Health Status</h2>
+            <p class="page-subtitle">Detailed health information for all application components</p>
+        </div>
+        
+        <!-- Error message if data fetch failed -->
+        <div th:if="${error}" class="error-message">
+            <span class="material-icons" style="margin-right: 8px;">error</span>
+            <span th:text="${error}">Error message</span>
+        </div>
+        
+        <!-- Overall health status -->
+        <div th:if="${healthData}" class="overall-status">
+            <div th:class="'status-indicator ' + (${healthData.status} == 'UP' ? 'status-up' : 'status-down')">
+                <span class="material-icons" th:text="${healthData.status == 'UP' ? 'check_circle' : 'error'}">check_circle</span>
+                <span th:text="${healthData.status}">UP</span>
+            </div>
+            <p>Overall application health status</p>
+        </div>
+        
+        <!-- Component details -->
+        <div th:if="${healthData?.components}" class="components-grid">
+            <div th:each="entry : ${healthData.components}" class="component-card">
+                <div class="component-header">
+                    <div class="component-title-section">
+                        <div th:class="'component-icon ' + (${entry.value['status']} == 'UP' ? 'up' : 'down')">
+                            <span class="material-icons" th:switch="${entry.key}">
+                                <span th:case="'db'">storage</span>
+                                <span th:case="'diskSpace'">folder</span>
+                                <span th:case="'mail'">email</span>
+                                <span th:case="'ping'">network_ping</span>
+                                <span th:case="'ssl'">security</span>
+                                <span th:case="*">settings</span>
+                            </span>
+                        </div>
+                        <h3 class="component-title" th:text="${#strings.capitalize(entry.key)}">Component</h3>
+                    </div>
+                    <div th:class="'component-status ' + (${entry.value['status']} == 'UP' ? 'up' : 'down')">
+                        <span class="material-icons" style="font-size: 14px;" th:text="${entry.value['status'] == 'UP' ? 'check_circle' : 'error'}">check_circle</span>
+                        <span th:text="${entry.value['status']}">UP</span>
+                    </div>
+                </div>
+                
+                <!-- Component details -->
+                <div th:if="${entry.value['details']}" class="component-details">
+                    <div th:each="detail : ${entry.value['details']}" class="detail-item">
+                        <span class="detail-label" th:text="${#strings.capitalize(detail.key)}">Label</span>
+                        <span class="detail-value">
+                            <!-- Format bytes values -->
+                            <span th:if="${detail.key == 'total' or detail.key == 'free' or detail.key == 'threshold'}">
+                                <span th:text="${#numbers.formatInteger(detail.value / 1024 / 1024 / 1024, 0)}">0</span> GB
+                                <span class="bytes-value" th:text="'(' + ${#numbers.formatInteger(detail.value, 0)} + ' bytes)'">bytes</span>
+                            </span>
+                            <!-- Regular values -->
+                            <span th:unless="${detail.key == 'total' or detail.key == 'free' or detail.key == 'threshold'}" th:text="${detail.value}">Value</span>
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Error details for failed components -->
+                <div th:if="${entry.value['status'] == 'DOWN' and entry.value['details'] != null and entry.value['details']['error'] != null}" class="component-details" style="margin-top: 16px; padding: 12px; background: #ffebee; border-radius: 4px;">
+                    <div class="detail-item" style="border: none;">
+                        <span class="detail-label">Error</span>
+                        <span class="error-detail-value" th:text="${entry.value['details']['error']}">Error message</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Action buttons -->
+        <div style="text-align: center; margin-bottom: 24px;">
+            <a href="/admin/actuator" class="btn btn-outline" style="margin-right: 16px;">
+                <span class="material-icons" style="font-size: 16px; margin-right: 4px;">arrow_back</span>
+                Back to Monitoring
+            </a>
+            <button onclick="location.reload()" class="btn btn-primary">
+                <span class="material-icons" style="font-size: 16px; margin-right: 4px;">refresh</span>
+                Refresh
+            </button>
+        </div>
+        
+        <!-- Refresh info -->
+        <div class="refresh-info">
+            <span class="material-icons" style="font-size: 14px; margin-right: 4px;">access_time</span>
+            Last updated: <span th:text="${lastUpdated != null ? #temporals.format(lastUpdated, 'yyyy-MM-dd HH:mm:ss') : 'Unknown'}">Unknown</span>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-refresh every 30 seconds
+        setTimeout(() => {
+            location.reload();
+        }, 30000);
+    </script>
+</body>
+</html>

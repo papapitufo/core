@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Info - Core Application</title>
+    
+    <!-- Material UI CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Custom CSS for Material UI-like styling -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            color: #212121;
+            line-height: 1.5;
+        }
+        
+        .header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #1976d2;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            color: #666;
+        }
+        
+        .breadcrumb a {
+            color: #1976d2;
+            text-decoration: none;
+        }
+        
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #2196f3 0%, #42a5f5 100%);
+            color: white;
+            border-radius: 4px;
+            padding: 32px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .page-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .info-card {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .info-header {
+            background: #f5f5f5;
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .info-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #212121;
+        }
+        
+        .info-content {
+            padding: 16px;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            gap: 16px;
+        }
+        
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 500;
+            color: #666;
+            flex-shrink: 0;
+            min-width: 120px;
+        }
+        
+        .info-value {
+            color: #212121;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            text-align: right;
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .badge-primary {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .badge-success {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .badge-info {
+            background-color: #e1f5fe;
+            color: #0277bd;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Roboto', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            color: #1976d2;
+            border: 1px solid #1976d2;
+        }
+        
+        .btn-outline:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .btn-primary {
+            background-color: #1976d2;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1565c0;
+            box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
+        }
+        
+        .material-icons {
+            font-size: 24px;
+        }
+        
+        .raw-data-card {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+        
+        .raw-data-header {
+            background: #f5f5f5;
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .raw-data-content {
+            padding: 16px;
+        }
+        
+        .raw-data-container {
+            background: #f8f9fa;
+            border-radius: 4px;
+            padding: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .raw-data-container pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            border-radius: 4px;
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .no-data-message {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 32px;
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1 class="header-title">Core Application</h1>
+        <div class="header-actions">
+            <div class="user-info">
+                <span class="material-icons">person</span>
+                <span sec:authentication="name">User</span>
+            </div>
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <button type="submit" class="btn btn-outline">
+                    <span class="material-icons" style="font-size: 16px; margin-right: 4px;">logout</span>
+                    Logout
+                </button>
+            </form>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="/dashboard">Dashboard</a>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <a href="/admin/actuator">System Monitoring</a>
+            <span class="material-icons" style="font-size: 16px;">chevron_right</span>
+            <span>Application Info</span>
+        </div>
+        
+        <div class="page-header">
+            <h2 class="page-title">Application Information</h2>
+            <p class="page-subtitle">Detailed information about the application configuration and runtime environment</p>
+        </div>
+        
+        <!-- Error message if data fetch failed -->
+        <div th:if="${error}" class="error-message">
+            <span class="material-icons" style="margin-right: 8px;">error</span>
+            <span th:text="${error}">Error message</span>
+        </div>
+        
+        <!-- Application Info Content -->
+        <div th:if="${infoData != null}" class="info-grid">
+            <!-- App Info Card -->
+            <div th:if="${appInfo != null}" class="info-card">
+                <div class="info-header">
+                    <span class="material-icons">info</span>
+                    <h3 class="info-title">Application Details</h3>
+                </div>
+                <div class="info-content">
+                    <div th:if="${appInfo.name}" class="info-item">
+                        <span class="info-label">Name:</span>
+                        <span class="info-value" th:text="${appInfo.name}">App Name</span>
+                    </div>
+                    <div th:if="${appInfo.description}" class="info-item">
+                        <span class="info-label">Description:</span>
+                        <span class="info-value" th:text="${appInfo.description}">App Description</span>
+                    </div>
+                    <div th:if="${appInfo.version}" class="info-item">
+                        <span class="info-label">Version:</span>
+                        <span class="info-value">
+                            <span class="badge badge-primary" th:text="${appInfo.version}">1.0.0</span>
+                        </span>
+                    </div>
+                    <div th:if="${appInfo.encoding}" class="info-item">
+                        <span class="info-label">Encoding:</span>
+                        <span class="info-value" th:text="${appInfo.encoding}">UTF-8</span>
+                    </div>
+                    <div th:if="${appInfo.java != null and appInfo.java.version != null}" class="info-item">
+                        <span class="info-label">Java Version:</span>
+                        <span class="info-value" th:text="${appInfo.java.version}">17</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Build Info Card -->
+            <div th:if="${buildInfo != null}" class="info-card">
+                <div class="info-header">
+                    <span class="material-icons">build</span>
+                    <h3 class="info-title">Java Runtime Information</h3>
+                </div>
+                <div class="info-content">
+                    <div th:if="${buildInfo.version}" class="info-item">
+                        <span class="info-label">Java Version:</span>
+                        <span class="info-value">
+                            <span class="badge badge-success" th:text="${buildInfo.version}">17.0.15</span>
+                        </span>
+                    </div>
+                    <div th:if="${buildInfo.vendor != null and buildInfo.vendor.name != null}" class="info-item">
+                        <span class="info-label">Vendor:</span>
+                        <span class="info-value" th:text="${buildInfo.vendor.name}">Oracle Corporation</span>
+                    </div>
+                    <div th:if="${buildInfo.runtime != null and buildInfo.runtime.name != null}" class="info-item">
+                        <span class="info-label">Runtime:</span>
+                        <span class="info-value" th:text="${buildInfo.runtime.name}">Java(TM) SE Runtime Environment</span>
+                    </div>
+                    <div th:if="${buildInfo.runtime != null and buildInfo.runtime.version != null}" class="info-item">
+                        <span class="info-label">Runtime Version:</span>
+                        <span class="info-value" th:text="${buildInfo.runtime.version}">17.0.15+9-LTS-241</span>
+                    </div>
+                    <div th:if="${buildInfo.jvm != null and buildInfo.jvm.name != null}" class="info-item">
+                        <span class="info-label">JVM:</span>
+                        <span class="info-value" th:text="${buildInfo.jvm.name}">Java HotSpot(TM) 64-Bit Server VM</span>
+                    </div>
+                    <div th:if="${buildInfo.jvm != null and buildInfo.jvm.version != null}" class="info-item">
+                        <span class="info-label">JVM Version:</span>
+                        <span class="info-value" th:text="${buildInfo.jvm.version}">17.0.15+9-LTS-241</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Git Info Card -->
+            <div th:if="${gitInfo != null}" class="info-card">
+                <div class="info-header">
+                    <span class="material-icons">business</span>
+                    <h3 class="info-title">Company Information</h3>
+                </div>
+                <div class="info-content">
+                    <div th:if="${gitInfo.name}" class="info-item">
+                        <span class="info-label">Company:</span>
+                        <span class="info-value">
+                            <span class="badge badge-info" th:text="${gitInfo.name}">Control Corp</span>
+                        </span>
+                    </div>
+                    <div th:if="${gitInfo.website}" class="info-item">
+                        <span class="info-label">Website:</span>
+                        <span class="info-value">
+                            <a th:href="${gitInfo.website}" th:text="${gitInfo.website}" target="_blank" style="color: #1976d2; text-decoration: none;">https://example.com</a>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        
+        <!-- Raw JSON Data -->
+        <div th:if="${infoData != null}" class="raw-data-card">
+            <div class="raw-data-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="material-icons">code</span>
+                    <h3 class="info-title">Raw JSON Data</h3>
+                </div>
+                <button class="btn btn-outline" onclick="copyToClipboard()">
+                    <span class="material-icons" style="font-size: 16px; margin-right: 4px;">content_copy</span>
+                    Copy
+                </button>
+            </div>
+            <div class="raw-data-content">
+                <div class="raw-data-container">
+                    <pre id="rawJson" th:text="${infoJson}">JSON data will appear here</pre>
+                </div>
+            </div>
+        </div>
+        
+        <!-- No data message -->
+        <div th:if="${infoData == null}" class="no-data-message">
+            <span class="material-icons" style="font-size: 48px; margin-bottom: 16px; color: #ccc;">info</span>
+            <h3 style="margin-bottom: 8px;">No Application Information Available</h3>
+            <p>The application info endpoint did not return any data. This may be normal if the info actuator is not configured.</p>
+            <a href="/admin/actuator-dashboard" class="btn btn-primary">
+                <span class="material-icons" style="font-size: 16px; margin-right: 4px;">arrow_back</span>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        function copyToClipboard() {
+            const text = document.getElementById('rawJson').textContent;
+            navigator.clipboard.writeText(text).then(function() {
+                const button = event.target.closest('button');
+                const originalText = button.innerHTML;
+                button.innerHTML = '<span class="material-icons" style="font-size: 16px; margin-right: 4px;">check</span>Copied!';
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                }, 2000);
+            }).catch(function(err) {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+        
+        // Auto-refresh functionality
+        function refreshData() {
+            window.location.reload();
+        }
+        
+        // Add keyboard shortcut for refresh (Ctrl+R or Cmd+R)
+        document.addEventListener('keydown', function(event) {
+            if ((event.ctrlKey || event.metaKey) && event.key === 'r') {
+                event.preventDefault();
+                refreshData();
+            }
+        });
+    </script>
+</body>
+</html>
