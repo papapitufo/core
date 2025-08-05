@@ -4,15 +4,23 @@ import com.control.core.dto.CreateUserRequest;
 import com.control.core.model.User;
 import com.control.core.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.health.HealthEndpoint;
+import org.springframework.boot.actuate.health.HealthComponent;
+import org.springframework.boot.actuate.info.InfoEndpoint;
+import org.springframework.boot.actuate.metrics.MetricsEndpoint;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import jakarta.validation.Valid;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/admin")
@@ -21,6 +29,15 @@ public class AdminController {
     
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private HealthEndpoint healthEndpoint;
+    
+    @Autowired
+    private InfoEndpoint infoEndpoint;
+    
+    @Autowired
+    private MetricsEndpoint metricsEndpoint;
     
     @GetMapping("/users")
     public String userManagement(@RequestParam(value = "search", required = false) String search,
@@ -178,5 +195,117 @@ public class AdminController {
     @GetMapping("/actuator")
     public String actuatorDashboard() {
         return "actuator-dashboard";
+    }
+    
+    @GetMapping("/actuator/health-detail")
+    public String healthDetail(Model model) {
+        try {
+            HealthComponent health = healthEndpoint.health();
+            
+            if (health != null) {
+                System.out.println("Health object class: " + health.getClass().getName());
+                System.out.println("Health status: " + health.getStatus().getCode());
+                
+                // Use Jackson to convert HealthComponent to a Map structure
+                ObjectMapper mapper = new ObjectMapper();
+                Map<String, Object> healthMap = mapper.convertValue(health, new TypeReference<Map<String, Object>>() {});
+                
+                System.out.println("Health map keys: " + healthMap.keySet());
+                System.out.println("Health map: " + healthMap);
+                
+                model.addAttribute("healthData", healthMap);
+                model.addAttribute("component", "health");
+            }
+        } catch (Exception e) {
+            System.err.println("Error in healthDetail: " + e.getMessage());
+            e.printStackTrace();
+            model.addAttribute("error", "Unable to fetch health information: " + e.getMessage());
+        }
+        
+        return "health-detail";
+    }
+    
+    @GetMapping("/actuator/info-detail")
+    public String infoDetail(Model model) {
+        try {
+            // InfoEndpoint.info() method returns OperationResponseBodyMap
+            Object infoData = infoEndpoint.info();
+            System.out.println("Info object class: " + infoData.getClass().getName());
+            System.out.println("Info data: " + infoData);
+            
+            // Use Jackson ObjectMapper to serialize and deserialize for clean Map conversion
+            ObjectMapper objectMapper = new ObjectMapper();
+            String jsonString = objectMapper.writeValueAsString(infoData);
+            System.out.println("Info JSON: " + jsonString);
+            
+            // Convert back to a proper Map structure
+            Map<String, Object> infoMap = objectMapper.readValue(jsonString, new TypeReference<Map<String, Object>>() {});
+            System.out.println("Converted info map: " + infoMap);
+            
+            // Set the main data
+            model.addAttribute("infoData", infoMap);
+            model.addAttribute("infoJson", jsonString);
+            
+            // Extract specific sections for the template
+            if (infoMap.containsKey("app")) {
+                model.addAttribute("appInfo", infoMap.get("app"));
+            }
+            
+            // Map 'java' section to 'buildInfo' for compatibility with template
+            if (infoMap.containsKey("java")) {
+                model.addAttribute("buildInfo", infoMap.get("java"));
+            }
+            
+            // Map 'company' section to 'gitInfo' for compatibility with template
+            if (infoMap.containsKey("company")) {
+                model.addAttribute("gitInfo", infoMap.get("company"));
+            }
+            
+            // Also keep original mappings for backwards compatibility
+            if (infoMap.containsKey("build")) {
+                model.addAttribute("buildInfo", infoMap.get("build"));
+            }
+            
+            if (infoMap.containsKey("git")) {
+                model.addAttribute("gitInfo", infoMap.get("git"));
+            }
+            
+            model.addAttribute("section", "info");
+        } catch (Exception e) {
+            System.out.println("Error fetching info: " + e.getMessage());
+            e.printStackTrace();
+            model.addAttribute("error", "Unable to fetch application information: " + e.getMessage());
+        }
+        
+        return "info-detail";
+    }
+    
+    @GetMapping("/actuator/metrics-detail")
+    public String metricsDetail(Model model) {
+        try {
+            // Use metricsEndpoint to get basic metric info
+            Map<String, Object> metricsData = new HashMap<>();
+            
+            // Try to use the endpoint
+            try {
+                // Actually call the metricsEndpoint
+                if (metricsEndpoint != null) {
+                    metricsData.put("endpoint", "MetricsEndpoint injected and accessible");
+                    metricsData.put("endpointClass", metricsEndpoint.getClass().getSimpleName());
+                } else {
+                    metricsData.put("endpoint", "MetricsEndpoint is null");
+                }
+                metricsData.put("section", "metrics");
+            } catch (Exception endpointEx) {
+                metricsData.put("error", "Metrics endpoint not available: " + endpointEx.getMessage());
+            }
+            
+            model.addAttribute("metricsData", metricsData);
+            model.addAttribute("section", "metrics");
+        } catch (Exception e) {
+            model.addAttribute("error", "Unable to fetch metrics information: " + e.getMessage());
+        }
+        
+        return "metrics-detail";
     }
 }
