@@ -370,8 +370,19 @@
                         <div th:unless="${metricDetail.containsKey('error')}">
                             <div th:if="${metricDetail.description}" class="metric-description" th:text="${metricDetail.description}">Metric description</div>
                             
+                            <!-- Show category if available -->
+                            <div th:if="${metricDetail.containsKey('category')}" class="metric-description">
+                                <strong>Category:</strong> <span th:text="${metricDetail.category}">Category</span>
+                            </div>
+                            
+                            <!-- Show enhancement info if available -->
+                            <div th:if="${metricDetail.containsKey('enhancedWithTags')}" class="metric-description">
+                                <strong>Enhanced with tags:</strong> 
+                                <span th:each="tag : ${metricDetail.enhancedWithTags}" th:text="${tag.key + '=' + tag.value}" style="margin-right: 8px;">tag=value</span>
+                            </div>
+                            
                             <!-- Display measurements -->
-                            <div th:if="${metricDetail.measurements}" th:each="measurement : ${metricDetail.measurements}" class="metric-measurement">
+                            <div th:if="${metricDetail.measurements != null and not #lists.isEmpty(metricDetail.measurements)}" th:each="measurement : ${metricDetail.measurements}" class="metric-measurement">
                                 <span class="measurement-label" th:text="${measurement.statistic}">Statistic</span>
                                 <span class="measurement-value">
                                     <span th:text="${#numbers.formatDecimal(measurement.value, 0, 2)}">0.00</span>
@@ -379,11 +390,26 @@
                                 </span>
                             </div>
                             
-                            <!-- If no measurements, show available tags -->
-                            <div th:if="${not metricDetail.measurements and metricDetail.availableTags}" class="metric-measurement">
-                                <span class="measurement-label">Available Tags</span>
-                                <span class="measurement-value" th:text="${#lists.size(metricDetail.availableTags)} + ' tags'">0 tags</span>
+                            <!-- If no measurements, show available tags or display info -->
+                            <div th:if="${metricDetail.measurements == null or #lists.isEmpty(metricDetail.measurements)}">
+                                <div th:if="${metricDetail.containsKey('displayInfo')}" class="metric-description" th:text="${metricDetail.displayInfo}">Display info</div>
+                                
+                                <div th:if="${metricDetail.availableTags != null and not #lists.isEmpty(metricDetail.availableTags)}" class="metric-measurement">
+                                    <span class="measurement-label">Available Tags</span>
+                                    <span class="measurement-value" th:text="${#lists.size(metricDetail.availableTags)} + ' tags available'">0 tags</span>
+                                </div>
+                                
+                                <!-- Show some available tag examples -->
+                                <div th:if="${metricDetail.availableTags != null and not #lists.isEmpty(metricDetail.availableTags)}" class="metric-value" style="margin-top: 8px;">
+                                    <div th:each="tagDef, iterStat : ${metricDetail.availableTags}" th:if="${iterStat.index < 3}" class="metric-measurement">
+                                        <span class="measurement-label" th:text="${tagDef.tag}">Tag name</span>
+                                        <span class="measurement-value" th:text="${#lists.size(tagDef.values)} + ' values'">0 values</span>
+                                    </div>
+                                </div>
                             </div>
+                            
+                            <!-- Show enhancement error if any -->
+                            <div th:if="${metricDetail.containsKey('enhancementError')}" class="metric-error" th:text="'Enhancement: ' + ${metricDetail.enhancementError}">Enhancement error</div>
                         </div>
                     </div>
                 </div>
