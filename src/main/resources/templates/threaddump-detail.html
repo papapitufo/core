@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thread Dump - Core Application</title>
+    
+    <!-- Material UI CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Custom CSS for Material UI-like styling -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            color: #212121;
+            line-height: 1.5;
+        }
+        
+        .header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #1976d2;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 0.875rem;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background-color: #1976d2;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1565c0;
+        }
+        
+        .btn-secondary {
+            background-color: #f5f5f5;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #eeeeee;
+        }
+        
+        .btn-success {
+            background-color: #4caf50;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #45a049;
+        }
+        
+        .breadcrumbs {
+            background: white;
+            padding: 12px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.875rem;
+        }
+        
+        .breadcrumbs a {
+            color: #1976d2;
+            text-decoration: none;
+        }
+        
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+        
+        .breadcrumbs .separator {
+            margin: 0 8px;
+            color: #999;
+        }
+        
+        .main-content {
+            padding: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 400;
+            color: #212121;
+        }
+        
+        .page-subtitle {
+            color: #666;
+            font-size: 1rem;
+            margin-top: 4px;
+        }
+        
+        .search-container {
+            position: relative;
+            margin-bottom: 24px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 48px 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            background: white;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #1976d2;
+            box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 500;
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: #212121;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-tab {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            background: white;
+            color: #666;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .filter-tab:hover {
+            background: #f5f5f5;
+        }
+        
+        .filter-tab.active {
+            background: #1976d2;
+            color: white;
+            border-color: #1976d2;
+        }
+        
+        .thread-list {
+            display: grid;
+            gap: 12px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .thread-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .thread-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        .thread-list::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+        
+        .thread-list::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+        
+        .thread-item {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 16px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .thread-item:hover {
+            background: #e9ecef;
+            border-color: #1976d2;
+        }
+        
+        .thread-item.expanded {
+            background: #e3f2fd;
+            border-color: #1976d2;
+        }
+        
+        .thread-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        
+        .thread-name {
+            font-weight: 500;
+            color: #1976d2;
+            font-size: 1rem;
+            margin-bottom: 4px;
+            word-break: break-all;
+        }
+        
+        .thread-id {
+            color: #666;
+            font-size: 0.875rem;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .thread-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .thread-state {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .thread-state.RUNNABLE {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .thread-state.BLOCKED {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .thread-state.WAITING {
+            background-color: #fff3e0;
+            color: #ef6c00;
+        }
+        
+        .thread-state.TIMED_WAITING {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .thread-state.TERMINATED {
+            background-color: #f5f5f5;
+            color: #616161;
+        }
+        
+        .thread-priority {
+            background-color: #e1f5fe;
+            color: #0277bd;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .thread-daemon {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .thread-group {
+            color: #666;
+            font-size: 0.75rem;
+            font-style: italic;
+        }
+        
+        .thread-details {
+            display: none;
+            margin-top: 16px;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 16px;
+        }
+        
+        .thread-details.expanded {
+            display: block;
+        }
+        
+        .stack-trace {
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            color: #333;
+        }
+        
+        .stack-frame {
+            margin-bottom: 2px;
+            color: #666;
+        }
+        
+        .stack-frame.highlight {
+            color: #1976d2;
+            font-weight: 500;
+        }
+        
+        .highlight {
+            background-color: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+        
+        .no-data {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px;
+        }
+        
+        .error-card {
+            background: #ffebee;
+            border: 1px solid #f8bbd9;
+            color: #c62828;
+        }
+        
+        .state-stats {
+            display: grid;
+            gap: 8px;
+        }
+        
+        .state-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .state-name {
+            font-weight: 500;
+            color: #212121;
+        }
+        
+        .state-count {
+            background-color: #1976d2;
+            color: white;
+            border-radius: 16px;
+            padding: 4px 12px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            min-width: 24px;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 16px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+            
+            .page-title {
+                font-size: 1.5rem;
+            }
+            
+            .filter-tabs {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-title">Core Application</div>
+        <div class="header-actions">
+            <div class="user-info" sec:authorize="isAuthenticated()">
+                <span class="material-icons">account_circle</span>
+                <span sec:authentication="name">User</span>
+            </div>
+            <a href="/admin/dashboard" class="btn btn-secondary">
+                <span class="material-icons">dashboard</span>
+                Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Breadcrumbs -->
+    <div class="breadcrumbs">
+        <a th:href="@{/dashboard}">Dashboard</a>
+        <span class="separator">></span>
+        <a th:href="@{/admin/actuator}">Actuator</a>
+        <span class="separator">></span>
+        <span>Environment Configuration</span>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Thread Dump</h1>
+                <p class="page-subtitle">Monitor and analyze application threads</p>
+            </div>
+            <button onclick="location.reload()" class="btn btn-success">
+                <span class="material-icons">refresh</span>
+                Refresh
+            </button>
+        </div>
+
+        <!-- Error Display -->
+        <div th:if="${error}" class="card error-card">
+            <div class="card-body">
+                <h3>Error</h3>
+                <p th:text="${error}"></p>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div th:unless="${error}" class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" th:text="${totalThreads}">0</div>
+                <div class="stat-label">Total Threads</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value" th:text="${userThreads}">0</div>
+                <div class="stat-label">User Threads</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value" th:text="${daemonThreads}">0</div>
+                <div class="stat-label">Daemon Threads</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value" th:text="${#maps.size(threadsByGroup)}">0</div>
+                <div class="stat-label">Thread Groups</div>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div th:unless="${error}" class="search-container">
+            <input type="text" 
+                   id="searchInput" 
+                   class="search-input"
+                   placeholder="Search threads by name, state, or group...">
+            <span class="material-icons search-icon">search</span>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div th:unless="${error}" class="filter-tabs">
+            <div class="filter-tab active" data-filter="all">All Threads</div>
+            <div class="filter-tab" data-filter="RUNNABLE">Runnable</div>
+            <div class="filter-tab" data-filter="BLOCKED">Blocked</div>
+            <div class="filter-tab" data-filter="WAITING">Waiting</div>
+            <div class="filter-tab" data-filter="TIMED_WAITING">Timed Waiting</div>
+            <div class="filter-tab" data-filter="daemon">Daemon Only</div>
+        </div>
+
+        <!-- Thread States Overview -->
+        <div th:unless="${error}" class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="material-icons">donut_large</span>
+                    Thread States Distribution
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="state-stats">
+                    <div class="state-item" th:each="entry : ${threadsByState}">
+                        <span class="state-name" th:text="${entry.key}">State</span>
+                        <span class="state-count" th:text="${entry.value}">Count</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thread Groups Overview -->
+        <div th:unless="${error}" class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="material-icons">group_work</span>
+                    Thread Groups
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="state-stats">
+                    <div class="state-item" th:each="entry : ${threadsByGroup}">
+                        <span class="state-name" th:text="${entry.key}">Group</span>
+                        <span class="state-count" th:text="${entry.value}">Count</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thread List -->
+        <div th:unless="${error}" class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="material-icons">list</span>
+                    Thread Details
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="thread-list">
+                    <div class="thread-item" 
+                         th:each="thread : ${threads}"
+                         th:attr="data-thread-name=${thread.threadName},data-thread-state=${thread.threadState},data-thread-group=${thread.threadGroup},data-is-daemon=${thread.daemon}">
+                        <div class="thread-header">
+                            <div>
+                                <div class="thread-name" th:text="${thread.threadName}">Thread Name</div>
+                                <div class="thread-id">ID: <span th:text="${thread.threadId}">1</span></div>
+                            </div>
+                        </div>
+                        
+                        <div class="thread-meta">
+                            <span class="thread-state" th:classappend="${thread.threadState}" th:text="${thread.threadState}">STATE</span>
+                            <span class="thread-priority" th:if="${thread.priority}">Priority: <span th:text="${thread.priority}">5</span></span>
+                            <span class="thread-daemon" th:if="${thread.daemon}">Daemon</span>
+                            <span class="thread-group" th:if="${thread.threadGroup}">Group: <span th:text="${thread.threadGroup}">main</span></span>
+                        </div>
+                        
+                        <div class="thread-details">
+                            <div th:if="${thread.stackTrace != null and #lists.size(thread.stackTrace) > 0}">
+                                <strong>Stack Trace:</strong>
+                                <div class="stack-trace">
+                                    <div class="stack-frame" th:each="frame, iterStat : ${thread.stackTrace}" 
+                                         th:classappend="${iterStat.index == 0} ? 'highlight' : ''">
+                                        <span th:text="${frame.className + '.' + frame.methodName + '(' + (frame.fileName != null ? frame.fileName + ':' + frame.lineNumber : 'Unknown Source') + ')'}">Stack Frame</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div th:unless="${thread.stackTrace != null and #lists.size(thread.stackTrace) > 0}" class="no-data">
+                                No stack trace available
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let currentFilter = 'all';
+            let currentSearchTerm = '';
+            
+            // Thread item click to expand/collapse
+            const threadItems = document.querySelectorAll('.thread-item');
+            
+            threadItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const details = this.querySelector('.thread-details');
+                    const isExpanded = this.classList.contains('expanded');
+                    
+                    if (isExpanded) {
+                        this.classList.remove('expanded');
+                        details.classList.remove('expanded');
+                    } else {
+                        this.classList.add('expanded');
+                        details.classList.add('expanded');
+                    }
+                });
+            });
+            
+            // Filter functionality
+            const filterTabs = document.querySelectorAll('.filter-tab');
+            
+            filterTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Update active tab
+                    filterTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    currentFilter = this.getAttribute('data-filter');
+                    applyFiltersAndSearch();
+                });
+            });
+            
+            // Search functionality
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    currentSearchTerm = this.value.toLowerCase().trim();
+                    applyFiltersAndSearch();
+                });
+            }
+            
+            function applyFiltersAndSearch() {
+                const threadItems = document.querySelectorAll('.thread-item');
+                
+                threadItems.forEach(item => {
+                    // Clear any existing highlights
+                    removeHighlight(item);
+                    
+                    // Check filter criteria
+                    const threadState = item.getAttribute('data-thread-state');
+                    const isDaemon = item.getAttribute('data-is-daemon') === 'true';
+                    const threadName = item.getAttribute('data-thread-name')?.toLowerCase() || '';
+                    const threadGroup = item.getAttribute('data-thread-group')?.toLowerCase() || '';
+                    
+                    // Apply filter
+                    let passesFilter = true;
+                    if (currentFilter === 'all') {
+                        passesFilter = true;
+                    } else if (currentFilter === 'daemon') {
+                        passesFilter = isDaemon;
+                    } else {
+                        passesFilter = threadState === currentFilter;
+                    }
+                    
+                    // Apply search
+                    let passesSearch = true;
+                    if (currentSearchTerm) {
+                        passesSearch = threadName.includes(currentSearchTerm) || 
+                                     threadState.toLowerCase().includes(currentSearchTerm) || 
+                                     threadGroup.includes(currentSearchTerm);
+                    }
+                    
+                    // Show/hide item based on both filter and search
+                    const isVisible = passesFilter && passesSearch;
+                    item.style.display = isVisible ? 'block' : 'none';
+                    
+                    // Highlight search terms if visible and searching
+                    if (isVisible && currentSearchTerm) {
+                        highlightText(item, currentSearchTerm);
+                    }
+                });
+            }
+            
+            function highlightText(element, searchTerm) {
+                // Remove existing highlights first
+                removeHighlight(element);
+                
+                const walker = document.createTreeWalker(
+                    element,
+                    NodeFilter.SHOW_TEXT,
+                    {
+                        acceptNode: function(node) {
+                            // Skip script and style elements and stack trace
+                            const parentTag = node.parentNode.tagName;
+                            if (parentTag === 'SCRIPT' || parentTag === 'STYLE' || 
+                                node.parentNode.classList.contains('stack-trace')) {
+                                return NodeFilter.FILTER_REJECT;
+                            }
+                            return NodeFilter.FILTER_ACCEPT;
+                        }
+                    },
+                    false
+                );
+                
+                const textNodes = [];
+                let node;
+                while (node = walker.nextNode()) {
+                    if (node.textContent.trim().length > 0) {
+                        textNodes.push(node);
+                    }
+                }
+                
+                textNodes.forEach(textNode => {
+                    const text = textNode.textContent;
+                    const regex = new RegExp(`(${escapeRegex(searchTerm)})`, 'gi');
+                    if (regex.test(text)) {
+                        const highlightedText = text.replace(regex, '<span class="highlight">$1</span>');
+                        const wrapper = document.createElement('span');
+                        wrapper.innerHTML = highlightedText;
+                        textNode.parentNode.replaceChild(wrapper, textNode);
+                    }
+                });
+            }
+            
+            function removeHighlight(element) {
+                const highlights = element.querySelectorAll('.highlight');
+                highlights.forEach(highlight => {
+                    const parent = highlight.parentNode;
+                    parent.replaceChild(document.createTextNode(highlight.textContent), highlight);
+                    parent.normalize();
+                });
+            }
+            
+            function escapeRegex(string) {
+                return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+        });
+    </script>
+</body>
+</html>

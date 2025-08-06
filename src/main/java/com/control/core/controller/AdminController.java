@@ -9,16 +9,22 @@ import org.springframework.boot.actuate.health.HealthComponent;
 import org.springframework.boot.actuate.info.InfoEndpoint;
 import org.springframework.boot.actuate.metrics.MetricsEndpoint;
 import org.springframework.boot.actuate.env.EnvironmentEndpoint;
+import org.springframework.boot.actuate.web.mappings.MappingsEndpoint;
+import org.springframework.boot.actuate.context.properties.ConfigurationPropertiesReportEndpoint;
+import org.springframework.boot.actuate.beans.BeansEndpoint;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import jakarta.validation.Valid;
+import java.util.*;
+import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +50,15 @@ public class AdminController {
     
     @Autowired
     private EnvironmentEndpoint environmentEndpoint;
+    
+    @Autowired(required = false)
+    private org.springframework.boot.actuate.web.mappings.MappingsEndpoint mappingsEndpoint;
+    
+    @Autowired(required = false)
+    private ConfigurationPropertiesReportEndpoint configPropsEndpoint;
+    
+    @Autowired(required = false)
+    private BeansEndpoint beansEndpoint;
     
     @GetMapping("/users")
     public String userManagement(@RequestParam(value = "search", required = false) String search,
@@ -469,6 +484,408 @@ public class AdminController {
         return "environment-detail";
     }
     
+    @GetMapping("/actuator/mappings-detail")
+    public String mappingsDetail(Model model) {
+        try {
+            if (mappingsEndpoint != null) {
+                // Get the complete mappings information
+                Object mappingsResponse = mappingsEndpoint.mappings();
+                
+                // Use Jackson ObjectMapper to convert to Map structure
+                ObjectMapper objectMapper = new ObjectMapper();
+                String mappingsJson = objectMapper.writeValueAsString(mappingsResponse);
+                @SuppressWarnings("unchecked")
+                Map<String, Object> mappingsMap = objectMapper.readValue(mappingsJson, Map.class);
+                
+                System.out.println("Mappings data keys: " + mappingsMap.keySet());
+                
+                // Process contexts and mappings for better display
+                Object contexts = mappingsMap.get("contexts");
+                Map<String, Object> processedContexts = new HashMap<>();
+                java.util.List<Map<String, Object>> allMappingsList = new java.util.ArrayList<>();
+                int totalMappings = 0;
+                
+                if (contexts instanceof Map) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> contextsMap = (Map<String, Object>) contexts;
+                    
+                    for (Map.Entry<String, Object> contextEntry : contextsMap.entrySet()) {
+                        String contextName = contextEntry.getKey();
+                        Object contextValue = contextEntry.getValue();
+                        
+                        if (contextValue instanceof Map) {
+                            @SuppressWarnings("unchecked")
+                            Map<String, Object> contextMap = (Map<String, Object>) contextValue;
+                            Object mappings = contextMap.get("mappings");
+                            
+                            if (mappings instanceof Map) {
+                                @SuppressWarnings("unchecked")
+                                Map<String, Object> mappingsData = (Map<String, Object>) mappings;
+                                
+                                // Process different types of mappings (dispatcherServlets, servletFilters, etc.)
+                                Map<String, Object> processedMappings = new HashMap<>();
+                                int contextMappingCount = 0;
+                                
+                                for (Map.Entry<String, Object> mappingTypeEntry : mappingsData.entrySet()) {
+                                    String mappingType = mappingTypeEntry.getKey();
+                                    Object mappingTypeData = mappingTypeEntry.getValue();
+                                    
+                                    if (mappingTypeData instanceof Map) {
+                                        @SuppressWarnings("unchecked")
+                                        Map<String, Object> typeMap = (Map<String, Object>) mappingTypeData;
+                                        
+                                        // Process each mapping in this type
+                                        for (Map.Entry<String, Object> specificMapping : typeMap.entrySet()) {
+                                            String mappingKey = specificMapping.getKey();
+                                            Object mappingDetails = specificMapping.getValue();
+                                            
+                                            if (mappingDetails instanceof java.util.Collection) {
+                                                @SuppressWarnings("unchecked")
+                                                java.util.Collection<Map<String, Object>> mappingsList = 
+                                                    (java.util.Collection<Map<String, Object>>) mappingDetails;
+                                                
+                                                for (Map<String, Object> mapping : mappingsList) {
+                                                    // Enhance mapping with context and type information
+                                                    Map<String, Object> enhancedMapping = new HashMap<>(mapping);
+                                                    enhancedMapping.put("context", contextName);
+                                                    enhancedMapping.put("mappingType", mappingType);
+                                                    enhancedMapping.put("mappingKey", mappingKey);
+                                                    
+                                                    // Extract and format handler information
+                                                    formatMappingHandler(enhancedMapping);
+                                                    
+                                                    allMappingsList.add(enhancedMapping);
+                                                    contextMappingCount++;
+                                                    totalMappings++;
+                                                }
+                                            }
+                                        }
+                                        
+                                        processedMappings.put(mappingType, typeMap);
+                                    }
+                                }
+                                
+                                Map<String, Object> processedContext = new HashMap<>();
+                                processedContext.put("name", contextName);
+                                processedContext.put("mappings", processedMappings);
+                                processedContext.put("mappingCount", contextMappingCount);
+                                
+                                processedContexts.put(contextName, processedContext);
+                            }
+                        }
+                    }
+                }
+                
+                // Sort mappings by predicate (URL pattern) for better display
+                allMappingsList.sort((a, b) -> {
+                    String patternA = extractUrlPattern(a);
+                    String patternB = extractUrlPattern(b);
+                    return patternA.compareTo(patternB);
+                });
+                
+                // Prepare summary statistics
+                Map<String, Object> mappingsSummary = new HashMap<>();
+                mappingsSummary.put("totalMappings", totalMappings);
+                mappingsSummary.put("totalContexts", processedContexts.size());
+                
+                // Group mappings by HTTP method for statistics
+                Map<String, Integer> methodCounts = new HashMap<>();
+                for (Map<String, Object> mapping : allMappingsList) {
+                    String methods = extractHttpMethods(mapping);
+                    if (methods != null && !methods.isEmpty()) {
+                        String[] methodArray = methods.split(", ");
+                        for (String method : methodArray) {
+                            methodCounts.put(method.trim(), methodCounts.getOrDefault(method.trim(), 0) + 1);
+                        }
+                    }
+                }
+                mappingsSummary.put("httpMethodCounts", methodCounts);
+                
+                // Add data to model
+                model.addAttribute("mappingsData", mappingsMap);
+                model.addAttribute("processedContexts", processedContexts);
+                model.addAttribute("allMappings", allMappingsList);
+                model.addAttribute("mappingsSummary", mappingsSummary);
+                model.addAttribute("lastUpdated", LocalDateTime.now());
+                
+            } else {
+                model.addAttribute("error", "MappingsEndpoint is not available");
+            }
+            
+            model.addAttribute("section", "mappings");
+        } catch (Exception e) {
+            System.out.println("Error fetching mappings: " + e.getMessage());
+            e.printStackTrace();
+            model.addAttribute("error", "Unable to fetch mappings information: " + e.getMessage());
+        }
+        
+        return "mappings-detail";
+    }
+    
+    /**
+     * Extract URL pattern from mapping for sorting and display
+     */
+    private String extractUrlPattern(Map<String, Object> mapping) {
+        Object predicate = mapping.get("predicate");
+        if (predicate != null) {
+            String predicateStr = predicate.toString();
+            // Extract URL pattern from predicate string (usually contains path patterns)
+            if (predicateStr.contains("patterns=[")) {
+                int start = predicateStr.indexOf("patterns=[") + 10;
+                int end = predicateStr.indexOf("]", start);
+                if (end > start) {
+                    return predicateStr.substring(start, end);
+                }
+            }
+            return predicateStr;
+        }
+        return "";
+    }
+    
+    /**
+     * Extract HTTP methods from mapping for display
+     */
+    private String extractHttpMethods(Map<String, Object> mapping) {
+        Object predicate = mapping.get("predicate");
+        if (predicate != null) {
+            String predicateStr = predicate.toString();
+            // Extract HTTP methods from predicate string
+            if (predicateStr.contains("methods=[")) {
+                int start = predicateStr.indexOf("methods=[") + 9;
+                int end = predicateStr.indexOf("]", start);
+                if (end > start) {
+                    return predicateStr.substring(start, end);
+                }
+            }
+        }
+        return "GET"; // Default to GET if not specified
+    }
+    
+    /**
+     * Format mapping handler information for better display
+     */
+    private void formatMappingHandler(Map<String, Object> mapping) {
+        Object handler = mapping.get("handler");
+        if (handler instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> handlerMap = (Map<String, Object>) handler;
+            
+            // Extract class name and method name for cleaner display
+            Object className = handlerMap.get("className");
+            Object methodName = handlerMap.get("name");
+            
+            if (className != null && methodName != null) {
+                String shortClassName = className.toString();
+                if (shortClassName.contains(".")) {
+                    shortClassName = shortClassName.substring(shortClassName.lastIndexOf(".") + 1);
+                }
+                mapping.put("handlerDisplay", shortClassName + "." + methodName + "()");
+            } else {
+                mapping.put("handlerDisplay", handler.toString());
+            }
+        } else if (handler != null) {
+            mapping.put("handlerDisplay", handler.toString());
+        } else {
+            mapping.put("handlerDisplay", "Unknown Handler");
+        }
+    }
+    
+    @GetMapping("/actuator/configprops-detail")
+    public String configPropsDetail(Model model) {
+        try {
+            if (configPropsEndpoint != null) {
+                // Get the complete configuration properties information
+                Object configPropsResponse = configPropsEndpoint.configurationProperties();
+                
+                // Use Jackson ObjectMapper to convert to Map structure
+                ObjectMapper objectMapper = new ObjectMapper();
+                String configPropsJson = objectMapper.writeValueAsString(configPropsResponse);
+                @SuppressWarnings("unchecked")
+                Map<String, Object> configPropsMap = objectMapper.readValue(configPropsJson, Map.class);
+                
+                System.out.println("ConfigProps data keys: " + configPropsMap.keySet());
+                
+                // Process contexts and configuration properties for better display
+                Object contexts = configPropsMap.get("contexts");
+                Map<String, Object> processedContexts = new HashMap<>();
+                java.util.List<Map<String, Object>> allConfigPropsList = new java.util.ArrayList<>();
+                int totalProperties = 0;
+                
+                if (contexts instanceof Map) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> contextsMap = (Map<String, Object>) contexts;
+                    
+                    for (Map.Entry<String, Object> contextEntry : contextsMap.entrySet()) {
+                        String contextName = contextEntry.getKey();
+                        Object contextValue = contextEntry.getValue();
+                        
+                        if (contextValue instanceof Map) {
+                            @SuppressWarnings("unchecked")
+                            Map<String, Object> contextMap = (Map<String, Object>) contextValue;
+                            Object beans = contextMap.get("beans");
+                            
+                            if (beans instanceof Map) {
+                                @SuppressWarnings("unchecked")
+                                Map<String, Object> beansMap = (Map<String, Object>) beans;
+                                
+                                Map<String, Object> processedBeans = new HashMap<>();
+                                int contextPropertyCount = 0;
+                                
+                                for (Map.Entry<String, Object> beanEntry : beansMap.entrySet()) {
+                                    String beanName = beanEntry.getKey();
+                                    Object beanData = beanEntry.getValue();
+                                    
+                                    if (beanData instanceof Map) {
+                                        @SuppressWarnings("unchecked")
+                                        Map<String, Object> beanMap = (Map<String, Object>) beanData;
+                                        
+                                        // Extract properties from the bean
+                                        Object properties = beanMap.get("properties");
+                                        if (properties instanceof Map) {
+                                            @SuppressWarnings("unchecked")
+                                            Map<String, Object> propsMap = (Map<String, Object>) properties;
+                                            
+                                            // Create enhanced bean info
+                                            Map<String, Object> enhancedBean = new HashMap<>(beanMap);
+                                            enhancedBean.put("beanName", beanName);
+                                            enhancedBean.put("context", contextName);
+                                            enhancedBean.put("propertyCount", propsMap.size());
+                                            
+                                            // Process individual properties for better display
+                                            Map<String, Object> processedProperties = new HashMap<>();
+                                            for (Map.Entry<String, Object> propEntry : propsMap.entrySet()) {
+                                                String propName = propEntry.getKey();
+                                                Object propData = propEntry.getValue();
+                                                
+                                                Map<String, Object> propInfo = new HashMap<>();
+                                                propInfo.put("name", propName);
+                                                propInfo.put("beanName", beanName);
+                                                propInfo.put("context", contextName);
+                                                
+                                                if (propData instanceof Map) {
+                                                    @SuppressWarnings("unchecked")
+                                                    Map<String, Object> propMap = (Map<String, Object>) propData;
+                                                    propInfo.putAll(propMap);
+                                                    
+                                                    // Extract value for display
+                                                    Object value = propMap.get("value");
+                                                    propInfo.put("displayValue", formatConfigPropertyValue(value));
+                                                } else {
+                                                    propInfo.put("value", propData);
+                                                    propInfo.put("displayValue", formatConfigPropertyValue(propData));
+                                                }
+                                                
+                                                processedProperties.put(propName, propInfo);
+                                                allConfigPropsList.add(propInfo);
+                                                contextPropertyCount++;
+                                                totalProperties++;
+                                            }
+                                            
+                                            enhancedBean.put("processedProperties", processedProperties);
+                                            processedBeans.put(beanName, enhancedBean);
+                                        }
+                                    }
+                                }
+                                
+                                Map<String, Object> processedContext = new HashMap<>();
+                                processedContext.put("name", contextName);
+                                processedContext.put("beans", processedBeans);
+                                processedContext.put("beanCount", processedBeans.size());
+                                processedContext.put("propertyCount", contextPropertyCount);
+                                
+                                processedContexts.put(contextName, processedContext);
+                            }
+                        }
+                    }
+                }
+                
+                // Sort properties by bean name and property name for better display
+                allConfigPropsList.sort((a, b) -> {
+                    String beanA = String.valueOf(a.get("beanName"));
+                    String beanB = String.valueOf(b.get("beanName"));
+                    int beanComparison = beanA.compareTo(beanB);
+                    if (beanComparison != 0) {
+                        return beanComparison;
+                    }
+                    String nameA = String.valueOf(a.get("name"));
+                    String nameB = String.valueOf(b.get("name"));
+                    return nameA.compareTo(nameB);
+                });
+                
+                // Prepare summary statistics
+                Map<String, Object> configPropsSummary = new HashMap<>();
+                configPropsSummary.put("totalProperties", totalProperties);
+                configPropsSummary.put("totalContexts", processedContexts.size());
+                
+                // Count beans across all contexts
+                int totalBeans = processedContexts.values().stream()
+                    .mapToInt(ctx -> {
+                        if (ctx instanceof Map) {
+                            @SuppressWarnings("unchecked")
+                            Map<String, Object> ctxMap = (Map<String, Object>) ctx;
+                            Object beanCount = ctxMap.get("beanCount");
+                            return beanCount instanceof Integer ? (Integer) beanCount : 0;
+                        }
+                        return 0;
+                    }).sum();
+                configPropsSummary.put("totalBeans", totalBeans);
+                
+                // Add data to model
+                model.addAttribute("configPropsData", configPropsMap);
+                model.addAttribute("processedContexts", processedContexts);
+                model.addAttribute("allConfigProps", allConfigPropsList);
+                model.addAttribute("configPropsSummary", configPropsSummary);
+                model.addAttribute("lastUpdated", LocalDateTime.now());
+                
+            } else {
+                model.addAttribute("error", "ConfigurationPropertiesReportEndpoint is not available");
+            }
+            
+            model.addAttribute("section", "configprops");
+        } catch (Exception e) {
+            System.out.println("Error fetching configuration properties: " + e.getMessage());
+            e.printStackTrace();
+            model.addAttribute("error", "Unable to fetch configuration properties information: " + e.getMessage());
+        }
+        
+        return "configprops-detail";
+    }
+    
+    /**
+     * Format configuration property value for better display
+     */
+    private String formatConfigPropertyValue(Object value) {
+        if (value == null) {
+            return "null";
+        }
+        
+        if (value instanceof String) {
+            String strValue = (String) value;
+            // Truncate very long values for display
+            if (strValue.length() > 200) {
+                return strValue.substring(0, 200) + "...";
+            }
+            return strValue;
+        }
+        
+        if (value instanceof java.util.Collection) {
+            java.util.Collection<?> collection = (java.util.Collection<?>) value;
+            return "[" + collection.size() + " items]";
+        }
+        
+        if (value instanceof Map) {
+            Map<?, ?> map = (Map<?, ?>) value;
+            return "{" + map.size() + " properties}";
+        }
+        
+        String stringValue = value.toString();
+        if (stringValue.length() > 200) {
+            return stringValue.substring(0, 200) + "...";
+        }
+        
+        return stringValue;
+    }
+    
     /**
      * Extract key properties that are commonly of interest for environment overview
      */
@@ -625,6 +1042,156 @@ public class AdminController {
         }
         
         return commonTags;
+    }
+    
+    @GetMapping("/actuator/beans-detail")
+    @PreAuthorize("hasRole('ADMIN')")
+    public String beansDetail(Model model) {
+        try {
+            // Get beans data from BeansEndpoint
+            BeansEndpoint.BeansDescriptor beansDescriptor = beansEndpoint.beans();
+            
+            // Convert to Map for easier template processing
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, Object> beansData = mapper.convertValue(beansDescriptor, new TypeReference<Map<String, Object>>() {});
+            
+            // Extract contexts
+            Map<String, Object> contexts = (Map<String, Object>) beansData.get("contexts");
+            
+            // Statistics
+            int totalBeans = 0;
+            int totalContexts = contexts.size();
+            Map<String, Integer> beansByContext = new HashMap<>();
+            Map<String, Integer> beansByType = new HashMap<>();
+            
+            for (Map.Entry<String, Object> contextEntry : contexts.entrySet()) {
+                String contextName = contextEntry.getKey();
+                Map<String, Object> contextData = (Map<String, Object>) contextEntry.getValue();
+                Map<String, Object> beans = (Map<String, Object>) contextData.get("beans");
+                
+                int contextBeanCount = beans.size();
+                totalBeans += contextBeanCount;
+                beansByContext.put(contextName, contextBeanCount);
+                
+                // Count beans by type
+                for (Map.Entry<String, Object> beanEntry : beans.entrySet()) {
+                    Map<String, Object> beanInfo = (Map<String, Object>) beanEntry.getValue();
+                    String type = (String) beanInfo.get("type");
+                    if (type != null) {
+                        // Get simple class name
+                        String simpleType = type.substring(type.lastIndexOf('.') + 1);
+                        beansByType.put(simpleType, beansByType.getOrDefault(simpleType, 0) + 1);
+                    }
+                }
+            }
+            
+            // Sort contexts by bean count
+            Map<String, Integer> sortedContexts = beansByContext.entrySet().stream()
+                    .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                    .collect(LinkedHashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), Map::putAll);
+            
+            // Get top bean types
+            Map<String, Integer> topBeanTypes = beansByType.entrySet().stream()
+                    .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                    .limit(10)
+                    .collect(LinkedHashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), Map::putAll);
+            
+            model.addAttribute("beansData", beansData);
+            model.addAttribute("contexts", contexts);
+            model.addAttribute("totalBeans", totalBeans);
+            model.addAttribute("totalContexts", totalContexts);
+            model.addAttribute("beansByContext", sortedContexts);
+            model.addAttribute("topBeanTypes", topBeanTypes);
+            
+            return "beans-detail";
+            
+        } catch (Exception e) {
+            model.addAttribute("error", "Failed to load beans information: " + e.getMessage());
+            return "beans-detail";
+        }
+    }
+    
+    @GetMapping("/actuator/threaddump-detail")
+    @PreAuthorize("hasRole('ADMIN')")
+    @SuppressWarnings("unchecked")
+    public String threadDumpDetail(Model model) {
+        try {
+            // Use RestTemplate to fetch thread dump data from actuator endpoint
+            RestTemplate restTemplate = new RestTemplate();
+            String threadDumpUrl = "http://localhost:8081/actuator/threaddump";
+            
+            // Get thread dump data as Map
+            Map<String, Object> threadDumpResponse = restTemplate.getForObject(threadDumpUrl, Map.class);
+            
+            // Extract threads array
+            List<Map<String, Object>> threads = threadDumpResponse != null ? 
+                (List<Map<String, Object>>) threadDumpResponse.get("threads") : new ArrayList<>();
+            
+            if (threads == null) {
+                threads = new ArrayList<>();
+            }
+            
+            // Calculate statistics
+            int totalThreads = threads.size();
+            Map<String, Integer> threadsByState = new HashMap<>();
+            Map<String, Integer> threadsByGroup = new HashMap<>();
+            int daemonThreads = 0;
+            
+            for (Map<String, Object> thread : threads) {
+                // Thread state statistics
+                String state = (String) thread.get("threadState");
+                if (state != null) {
+                    threadsByState.put(state, threadsByState.getOrDefault(state, 0) + 1);
+                }
+                
+                // Extract thread group from thread name (simplified approach)
+                String threadName = (String) thread.get("threadName");
+                String groupName = "main"; // default group
+                if (threadName != null) {
+                    if (threadName.contains("http-nio")) {
+                        groupName = "Tomcat";
+                    } else if (threadName.contains("HikariPool")) {
+                        groupName = "Database";
+                    } else if (threadName.contains("Catalina")) {
+                        groupName = "Catalina";
+                    } else if (threadName.contains("Reference Handler") || threadName.contains("Finalizer") || threadName.contains("Signal Dispatcher")) {
+                        groupName = "JVM";
+                    }
+                    // Add thread group to thread for template use
+                    thread.put("threadGroup", groupName);
+                }
+                threadsByGroup.put(groupName, threadsByGroup.getOrDefault(groupName, 0) + 1);
+                
+                // Daemon thread count
+                Boolean daemon = (Boolean) thread.get("daemon");
+                if (Boolean.TRUE.equals(daemon)) {
+                    daemonThreads++;
+                }
+            }
+            
+            // Sort threads by state for better visualization
+            Map<String, Integer> sortedThreadsByState = threadsByState.entrySet().stream()
+                    .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                    .collect(LinkedHashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), Map::putAll);
+            
+            // Sort thread groups by thread count
+            Map<String, Integer> sortedThreadsByGroup = threadsByGroup.entrySet().stream()
+                    .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                    .collect(LinkedHashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), Map::putAll);
+            
+            model.addAttribute("threads", threads);
+            model.addAttribute("totalThreads", totalThreads);
+            model.addAttribute("threadsByState", sortedThreadsByState);
+            model.addAttribute("threadsByGroup", sortedThreadsByGroup);
+            model.addAttribute("daemonThreads", daemonThreads);
+            model.addAttribute("userThreads", totalThreads - daemonThreads);
+            
+            return "threaddump-detail";
+            
+        } catch (Exception e) {
+            model.addAttribute("error", "Failed to load thread dump information: " + e.getMessage());
+            return "threaddump-detail";
+        }
     }
     
     /**

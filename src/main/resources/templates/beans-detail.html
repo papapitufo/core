@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Beans - Core Application</title>
+    
+    <!-- Material UI CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Custom CSS for Material UI-like styling -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            color: #212121;
+            line-height: 1.5;
+        }
+        
+        .header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #1976d2;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 0.875rem;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background-color: #1976d2;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1565c0;
+        }
+        
+        .btn-secondary {
+            background-color: #f5f5f5;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #eeeeee;
+        }
+        
+        .breadcrumbs {
+            background: white;
+            padding: 12px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.875rem;
+        }
+        
+        .breadcrumbs a {
+            color: #1976d2;
+            text-decoration: none;
+        }
+        
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+        
+        .breadcrumbs .separator {
+            margin: 0 8px;
+            color: #999;
+        }
+        
+        .main-content {
+            padding: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 400;
+            color: #212121;
+        }
+        
+        .page-subtitle {
+            color: #666;
+            font-size: 1rem;
+            margin-top: 4px;
+        }
+        
+        .search-container {
+            position: relative;
+            margin-bottom: 24px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 48px 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            background: white;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #1976d2;
+            box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 500;
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: #212121;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .collapsible {
+            border: none;
+            box-shadow: none;
+            margin: 0;
+        }
+        
+        .collapsible-item {
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .collapsible-header {
+            background: #f8f9fa;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border: none;
+            font-weight: 500;
+            color: #212121;
+            transition: all 0.2s ease;
+        }
+        
+        .collapsible-header:hover {
+            background: #e9ecef;
+        }
+        
+        .collapsible-header.active {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .collapsible-body {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .collapsible-body.active {
+            max-height: 600px;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .collapsible-body.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.05));
+            pointer-events: none;
+        }
+        
+        .collapsible-content {
+            padding: 20px;
+            max-height: 560px;
+            overflow-y: auto;
+        }
+        
+        .collapsible-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .collapsible-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        .collapsible-content::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+        
+        .collapsible-content::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+        
+        .bean-list {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .bean-item {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .bean-item:hover {
+            background: #e9ecef;
+            border-color: #1976d2;
+        }
+        
+        .bean-name {
+            font-weight: 500;
+            color: #1976d2;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+        
+        .bean-type {
+            color: #666;
+            font-size: 0.875rem;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+        
+        .bean-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .bean-scope {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .bean-resource {
+            color: #666;
+            font-size: 0.75rem;
+            font-style: italic;
+        }
+        
+        .bean-dependencies {
+            margin-top: 12px;
+        }
+        
+        .dependencies-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #212121;
+            margin-bottom: 4px;
+        }
+        
+        .dependency {
+            color: #666;
+            font-size: 0.8rem;
+            padding: 2px 0;
+            margin-left: 16px;
+            border-left: 2px solid #e0e0e0;
+            padding-left: 8px;
+        }
+        
+        .bean-count {
+            background-color: #1976d2;
+            color: white;
+            border-radius: 16px;
+            padding: 4px 12px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            min-width: 24px;
+            text-align: center;
+        }
+        
+        .highlight {
+            background-color: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+        
+        .no-data {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px;
+        }
+        
+        .error-card {
+            background: #ffebee;
+            border: 1px solid #f8bbd9;
+            color: #c62828;
+        }
+        
+        .top-types-list {
+            display: grid;
+            gap: 8px;
+        }
+        
+        .type-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .type-name {
+            font-weight: 500;
+            color: #212121;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 16px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            
+            .page-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-title">Core Application</div>
+        <div class="header-actions">
+            <div class="user-info" sec:authorize="isAuthenticated()">
+                <span class="material-icons">account_circle</span>
+                <span sec:authentication="name">User</span>
+            </div>
+            <a href="/admin/dashboard" class="btn btn-secondary">
+                <span class="material-icons">dashboard</span>
+                Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Breadcrumbs -->
+    <div class="breadcrumbs">
+        <a th:href="@{/dashboard}">Dashboard</a>
+        <span class="separator">></span>
+        <a th:href="@{/admin/actuator}">Actuator</a>
+        <span class="separator">></span>
+        <span>Environment Configuration</span>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Spring Beans</h1>
+                <p class="page-subtitle">View all Spring beans in the application context</p>
+            </div>
+        </div>
+
+        <!-- Error Display -->
+        <div th:if="${error}" class="card error-card">
+            <div class="card-body">
+                <h3>Error</h3>
+                <p th:text="${error}"></p>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div th:unless="${error}" class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" th:text="${totalBeans}">0</div>
+                <div class="stat-label">Total Beans</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value" th:text="${totalContexts}">0</div>
+                <div class="stat-label">Application Contexts</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value" th:text="${#maps.size(topBeanTypes)}">0</div>
+                <div class="stat-label">Bean Types</div>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div th:unless="${error}" class="search-container">
+            <input type="text" 
+                   id="searchInput" 
+                   class="search-input"
+                   placeholder="Search beans by name, type, or context...">
+            <span class="material-icons search-icon">search</span>
+        </div>
+
+        <!-- Top Bean Types -->
+        <div th:unless="${error}" class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="material-icons">bar_chart</span>
+                    Top Bean Types
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="top-types-list">
+                    <div class="type-item" th:each="entry : ${topBeanTypes}">
+                        <span class="type-name" th:text="${entry.key}">Type Name</span>
+                        <span class="bean-count" th:text="${entry.value}">Count</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Beans by Context -->
+        <div th:unless="${error}" class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="material-icons">account_tree</span>
+                    Beans by Context
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="collapsible">
+                    <div class="collapsible-item" th:each="contextEntry : ${beansByContext}">
+                        <div class="collapsible-header" th:attr="data-context=${contextEntry.key}">
+                            <div>
+                                <span class="material-icons">folder</span>
+                                <span th:text="${contextEntry.key}">Context Name</span>
+                            </div>
+                            <span class="bean-count" th:text="${contextEntry.value}">Count</span>
+                        </div>
+                        <div class="collapsible-body">
+                            <div class="collapsible-content">
+                                <div th:if="${contexts.containsKey(contextEntry.key)}">
+                                    <div th:with="contextData=${contexts.get(contextEntry.key)}">
+                                        <div th:if="${contextData.containsKey('beans')}">
+                                            <div th:with="beansMap=${contextData.get('beans')}">
+                                                <div class="bean-list">
+                                                    <div class="bean-item" 
+                                                         th:each="beanEntry : ${beansMap}" 
+                                                         th:attr="data-bean-name=${beanEntry.key},data-context=${contextEntry.key}">
+                                                        <div th:with="beanInfo=${beanEntry.value}">
+                                                            <div class="bean-name" th:text="${beanEntry.key}">Bean Name</div>
+                                                            <div class="bean-type" 
+                                                                 th:if="${beanInfo.containsKey('type')}" 
+                                                                 th:text="${beanInfo.get('type')}">Bean Type</div>
+                                                            
+                                                            <div class="bean-meta">
+                                                                <div th:if="${beanInfo.containsKey('scope')}">
+                                                                    <span class="bean-scope" th:text="${beanInfo.get('scope')}">singleton</span>
+                                                                </div>
+                                                                
+                                                                <div th:if="${beanInfo.containsKey('resource')}" class="bean-resource">
+                                                                    Resource: <span th:text="${beanInfo.get('resource')}">Resource</span>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div th:if="${beanInfo.containsKey('dependencies') and beanInfo.get('dependencies') != null}" 
+                                                                 class="bean-dependencies">
+                                                                <div th:with="deps=${beanInfo.get('dependencies')}">
+                                                                    <div th:if="${#lists.size(deps) > 0}">
+                                                                        <div class="dependencies-title">Dependencies:</div>
+                                                                        <div class="dependency" th:each="dep : ${deps}" th:text="${dep}">Dependency</div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div th:unless="${contextData.containsKey('beans')}" class="no-data">
+                                            No beans found in this context
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize collapsible functionality
+            const collapsibleHeaders = document.querySelectorAll('.collapsible-header');
+            
+            collapsibleHeaders.forEach(header => {
+                header.addEventListener('click', function() {
+                    const body = this.nextElementSibling;
+                    const isActive = this.classList.contains('active');
+                    
+                    // Close all other collapsibles
+                    collapsibleHeaders.forEach(otherHeader => {
+                        otherHeader.classList.remove('active');
+                        otherHeader.nextElementSibling.classList.remove('active');
+                    });
+                    
+                    // Toggle current collapsible
+                    if (!isActive) {
+                        this.classList.add('active');
+                        body.classList.add('active');
+                    }
+                });
+            });
+            
+            // Search functionality
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase().trim();
+                    const beanItems = document.querySelectorAll('.bean-item');
+                    const contextItems = document.querySelectorAll('.collapsible-item');
+                    
+                    // If search is empty, show all items
+                    if (!searchTerm) {
+                        beanItems.forEach(item => {
+                            item.style.display = 'block';
+                            removeHighlight(item);
+                        });
+                        contextItems.forEach(item => item.style.display = 'block');
+                        return;
+                    }
+                    
+                    // Filter bean items
+                    beanItems.forEach(function(item) {
+                        const beanName = item.getAttribute('data-bean-name')?.toLowerCase() || '';
+                        const context = item.getAttribute('data-context')?.toLowerCase() || '';
+                        const beanTypeEl = item.querySelector('.bean-type');
+                        const beanTypeText = beanTypeEl ? beanTypeEl.textContent.toLowerCase() : '';
+                        
+                        const isVisible = beanName.includes(searchTerm) || 
+                                        context.includes(searchTerm) || 
+                                        beanTypeText.includes(searchTerm);
+                        
+                        item.style.display = isVisible ? 'block' : 'none';
+                        
+                        if (isVisible) {
+                            highlightText(item, searchTerm);
+                        } else {
+                            removeHighlight(item);
+                        }
+                    });
+                    
+                    // Show/hide context items based on whether they have visible beans
+                    contextItems.forEach(function(contextItem) {
+                        const visibleBeans = contextItem.querySelectorAll('.bean-item[style*="display: block"], .bean-item:not([style*="display: none"])').length;
+                        contextItem.style.display = visibleBeans > 0 ? 'block' : 'none';
+                        
+                        // Auto-expand contexts that have matching beans
+                        if (visibleBeans > 0 && searchTerm) {
+                            const header = contextItem.querySelector('.collapsible-header');
+                            const body = contextItem.querySelector('.collapsible-body');
+                            if (header && body) {
+                                header.classList.add('active');
+                                body.classList.add('active');
+                            }
+                        }
+                    });
+                });
+            }
+            
+            function highlightText(element, searchTerm) {
+                // Remove existing highlights first
+                removeHighlight(element);
+                
+                const walker = document.createTreeWalker(
+                    element,
+                    NodeFilter.SHOW_TEXT,
+                    {
+                        acceptNode: function(node) {
+                            // Skip script and style elements
+                            if (node.parentNode.tagName === 'SCRIPT' || node.parentNode.tagName === 'STYLE') {
+                                return NodeFilter.FILTER_REJECT;
+                            }
+                            return NodeFilter.FILTER_ACCEPT;
+                        }
+                    },
+                    false
+                );
+                
+                const textNodes = [];
+                let node;
+                while (node = walker.nextNode()) {
+                    if (node.textContent.trim().length > 0) {
+                        textNodes.push(node);
+                    }
+                }
+                
+                textNodes.forEach(textNode => {
+                    const text = textNode.textContent;
+                    const regex = new RegExp(`(${escapeRegex(searchTerm)})`, 'gi');
+                    if (regex.test(text)) {
+                        const highlightedText = text.replace(regex, '<span class="highlight">$1</span>');
+                        const wrapper = document.createElement('span');
+                        wrapper.innerHTML = highlightedText;
+                        textNode.parentNode.replaceChild(wrapper, textNode);
+                    }
+                });
+            }
+            
+            function removeHighlight(element) {
+                const highlights = element.querySelectorAll('.highlight');
+                highlights.forEach(highlight => {
+                    const parent = highlight.parentNode;
+                    parent.replaceChild(document.createTextNode(highlight.textContent), highlight);
+                    parent.normalize();
+                });
+            }
+            
+            function escapeRegex(string) {
+                return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+        });
+    </script>
+</body>
+</html>
