@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Environment Configuration - Core Application</title>
+    <title>Configuration Properties - Core Application</title>
     
     <!-- Material UI CSS -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -215,102 +215,6 @@
             padding: 20px;
         }
         
-        .property-grid {
-            display: grid;
-            gap: 12px;
-        }
-        
-        .property-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 16px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            border-left: 4px solid #1976d2;
-            gap: 20px;
-            min-height: 60px;
-            margin-bottom: 12px;
-            word-break: keep-all;
-            overflow-wrap: normal;
-        }
-        
-        .property-key {
-            font-weight: 500;
-            color: #1565c0;
-            font-size: 0.9rem;
-            word-break: keep-all;
-            overflow-wrap: normal;
-            white-space: nowrap;
-            flex: 0 0 auto;
-            margin-right: 20px;
-            min-width: 200px;
-            max-width: 300px;
-            line-height: 1.4;
-        }
-        
-        .property-value {
-            color: #2c3e50 !important;
-            font-size: 0.9rem;
-            background: #ffffff !important;
-            padding: 10px 14px;
-            border: 2px solid #e1e8ed;
-            border-radius: 6px;
-            min-width: 200px;
-            max-height: 120px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            word-break: keep-all;
-            overflow-wrap: break-word;
-            white-space: pre-wrap;
-            line-height: 1.4;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            opacity: 1 !important;
-            visibility: visible !important;
-            overflow-y: auto;
-            overflow-x: hidden;
-            flex: 1;
-        }
-
-        .null-value {
-            color: #9e9e9e !important;
-            font-style: italic;
-            background: #f8f8f8 !important;
-            border-color: #e0e0e0 !important;
-        }
-
-        /* Prevent text wrapping issues for long property names */
-        .property-key {
-            text-overflow: ellipsis;
-            overflow: hidden;
-        }
-
-        .property-source {
-            font-size: 0.75rem;
-            color: #999;
-            margin-left: 8px;
-        }
-        
-        .source-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-        
-        .source-name {
-            font-weight: 500;
-            color: #1976d2;
-        }
-        
-        .source-count {
-            background: #e3f2fd;
-            color: #1976d2;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-        
         .collapsible {
             cursor: pointer;
             user-select: none;
@@ -327,7 +231,7 @@
         }
         
         .collapsible-content.active {
-            max-height: 2000px;
+            max-height: 3000px;
         }
         
         .expand-icon {
@@ -337,12 +241,130 @@
         .expand-icon.rotated {
             transform: rotate(180deg);
         }
-    
         
-        .key-properties-grid .property-item {
-            flex: 1 1 calc(33.333% - 16px);
-            min-width: 280px;
-            box-sizing: border-box;
+        .bean-list {
+            display: grid;
+            gap: 16px;
+        }
+        
+        .bean-item {
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #4caf50;
+            overflow: hidden;
+        }
+        
+        .bean-header {
+            padding: 12px 16px;
+            background: #f0f8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .bean-header:hover {
+            background: #e8f5e8;
+        }
+        
+        .bean-name {
+            font-weight: 500;
+            color: #2e7d32;
+            font-size: 0.95rem;
+        }
+        
+        .bean-count {
+            background: #c8e6c9;
+            color: #1b5e20;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .bean-properties {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .bean-properties.active {
+            max-height: 2000px;
+        }
+        
+        .property-list {
+            padding: 16px;
+            display: grid;
+            gap: 12px;
+        }
+        
+        .property-item {
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            gap: 8px;
+        }
+        
+        .property-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        
+        .property-name {
+            font-weight: 500;
+            color: #1565c0;
+            font-size: 0.9rem;
+            font-family: 'Courier New', monospace;
+            background: #f5f7fa;
+            padding: 4px 8px;
+            border-radius: 3px;
+            flex: 1;
+        }
+        
+        .property-type {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        .property-value {
+            color: #2c3e50;
+            font-size: 0.85rem;
+            background: #ffffff;
+            padding: 8px 12px;
+            border: 1px solid #e1e8ed;
+            border-radius: 4px;
+            max-height: 100px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .property-description {
+            color: #666;
+            font-size: 0.8rem;
+            font-style: italic;
+            margin-top: 4px;
+        }
+        
+        .source-count {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
         }
         
         .error-message {
@@ -374,13 +396,6 @@
             margin-top: 24px;
         }
         
-        @media (max-width: 1200px) {
-            .key-properties-grid .property-item {
-                flex: 1 1 calc(50% - 16px);
-                min-width: 250px;
-            }
-        }
-        
         @media (max-width: 768px) {
             .main-content {
                 padding: 16px;
@@ -390,39 +405,15 @@
                 grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             }
             
-            .key-properties-grid {
+            .property-header {
                 flex-direction: column;
+                gap: 8px;
             }
             
-            .key-properties-grid .property-item {
-                flex: 1 1 100%;
-                min-width: unset;
-                max-width: unset;
-            }
-            
-            .property-item {
+            .bean-header {
                 flex-direction: column;
+                gap: 8px;
                 align-items: flex-start;
-                gap: 12px;
-                padding: 16px;
-                word-break: keep-all;
-                overflow-wrap: normal;
-            }
-            
-            .property-key {
-                margin-right: 0;
-                word-break: keep-all;
-                overflow-wrap: normal;
-                white-space: nowrap;
-                margin-bottom: 8px;
-            }
-            
-            .property-value {
-                max-width: 100%;
-                width: 100%;
-                min-width: auto;
-                word-break: break-word;
-                overflow-wrap: break-word;
             }
         }
     </style>
@@ -431,7 +422,7 @@
     <!-- Header -->
     <div class="header">
         <div class="header-title">
-            <i class="material-icons" style="margin-right: 8px;">settings</i>
+            <i class="material-icons" style="margin-right: 8px;">tune</i>
             Core Application
         </div>
         <div class="header-actions">
@@ -454,7 +445,7 @@
         <span class="separator">></span>
         <a th:href="@{/admin/actuator}">Actuator</a>
         <span class="separator">></span>
-        <span>Environment Configuration</span>
+        <span>Configuration Properties</span>
     </div>
 
     <!-- Main Content -->
@@ -463,7 +454,7 @@
         <div class="page-header">
             <h1 class="page-title">
                 <i class="material-icons" style="margin-right: 12px; vertical-align: middle;">tune</i>
-                Environment Configuration
+                Configuration Properties
             </h1>
             <a th:href="@{/admin/actuator}" class="btn btn-secondary">
                 <i class="material-icons">arrow_back</i>
@@ -478,20 +469,20 @@
         </div>
 
         <!-- Content when data is available -->
-        <div th:if="${not #strings.isEmpty(environmentSummary)}">
+        <div th:if="${not #strings.isEmpty(configPropsSummary)}">
             <!-- Statistics Cards -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-value" th:text="${environmentSummary.totalSources}">0</div>
-                    <div class="stat-label">Property Sources</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" th:text="${environmentSummary.totalProperties}">0</div>
+                    <div class="stat-value" th:text="${configPropsSummary.totalProperties}">0</div>
                     <div class="stat-label">Total Properties</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" th:text="${#maps.size(keyProperties)}">0</div>
-                    <div class="stat-label">Key Properties</div>
+                    <div class="stat-value" th:text="${configPropsSummary.totalBeans}">0</div>
+                    <div class="stat-label">Configuration Beans</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" th:text="${configPropsSummary.totalContexts}">0</div>
+                    <div class="stat-label">Application Contexts</div>
                 </div>
             </div>
 
@@ -500,52 +491,44 @@
                 <input type="text" 
                        id="searchInput" 
                        class="search-input" 
-                       placeholder="Search properties by name or value...">
+                       placeholder="Search configuration properties by bean name, property name, or value...">
                 <i class="material-icons search-icon">search</i>
             </div>
 
-            <!-- Key Properties Overview -->
-            <div class="card" th:if="${not #maps.isEmpty(keyProperties)}">
-                <div class="card-header">
-                    <div class="card-title">
-                        <i class="material-icons">star</i>
-                        Key Properties Overview
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="key-properties-grid">
-                        <div th:each="prop : ${keyProperties}" class="property-item searchable-item">
-                            <div class="property-key" th:text="${prop.key}">Property Name</div>
-                            <div>
-                                <div class="property-value" th:text="${prop.value}">Property Value</div>
-                                <div class="property-source" th:text="'from ' + ${prop.source}">Source</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Property Sources -->
-            <div th:each="source : ${propertySources}" class="card searchable-item">
+            <!-- Configuration Properties by Context -->
+            <div th:each="context : ${processedContexts}" class="card searchable-item">
                 <div class="card-header collapsible" th:onclick="'toggleCollapse(this)'">
                     <div class="card-title">
-                        <i class="material-icons">folder</i>
-                        <span th:text="${source.value.name}">Source Name</span>
+                        <i class="material-icons">account_tree</i>
+                        <span th:text="'Context: ' + ${context.value.name}">Context Name</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <div class="source-count" th:text="${source.value.propertyCount} + ' properties'">Count</div>
+                        <div class="source-count" th:text="${context.value.beanCount} + ' beans, ' + ${context.value.propertyCount} + ' properties'">Count</div>
                         <i class="material-icons expand-icon">expand_more</i>
                     </div>
                 </div>
                 <div class="collapsible-content">
                     <div class="card-body">
-                        <div class="property-grid">
-                            <div th:each="prop : ${source.value.properties}" class="property-item searchable-item">
-                                <div class="property-key" th:text="${prop.value.key}">Property Name</div>
-                                <div class="property-value" 
-                                     th:text="${prop.value.value != null ? prop.value.value : 'null'}"
-                                     th:class="${prop.value.value == null} ? 'property-value null-value' : 'property-value'">
-                                     Property Value
+                        <div class="bean-list">
+                            <div th:each="bean : ${context.value.beans}" class="bean-item searchable-item">
+                                <div class="bean-header" th:onclick="'toggleBeanProperties(this)'">
+                                    <div class="bean-name" th:text="${bean.value.beanName}">Bean Name</div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div class="bean-count" th:text="${bean.value.propertyCount} + ' properties'">Property Count</div>
+                                        <i class="material-icons expand-icon" style="font-size: 18px;">expand_more</i>
+                                    </div>
+                                </div>
+                                <div class="bean-properties">
+                                    <div class="property-list">
+                                        <div th:each="prop : ${bean.value.processedProperties}" class="property-item searchable-item">
+                                            <div class="property-header">
+                                                <div class="property-name" th:text="${prop.value.name}">Property Name</div>
+                                                <div class="property-type" th:text="${prop.value.containsKey('type') ? prop.value.type : 'String'}">Type</div>
+                                            </div>
+                                            <div class="property-value" th:text="${prop.value.displayValue}">Property Value</div>
+                                            <div th:if="${prop.value.containsKey('description') and prop.value.description}" class="property-description" th:text="${prop.value.description}">Description</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -577,7 +560,7 @@
             });
         });
 
-        // Collapsible functionality
+        // Collapsible functionality for contexts
         function toggleCollapse(element) {
             const content = element.nextElementSibling;
             const icon = element.querySelector('.expand-icon');
@@ -586,12 +569,29 @@
             icon.classList.toggle('rotated');
         }
 
-        // Auto-expand first few sources by default
+        // Collapsible functionality for beans
+        function toggleBeanProperties(element) {
+            const content = element.nextElementSibling;
+            const icon = element.querySelector('.expand-icon');
+            
+            content.classList.toggle('active');
+            icon.classList.toggle('rotated');
+        }
+
+        // Auto-expand first context by default
         document.addEventListener('DOMContentLoaded', function() {
-            const collapsibleHeaders = document.querySelectorAll('.collapsible');
-            // Auto-expand first 3 sources for better UX
-            for (let i = 0; i < Math.min(3, collapsibleHeaders.length); i++) {
-                toggleCollapse(collapsibleHeaders[i]);
+            const collapsibleHeaders = document.querySelectorAll('.card-header.collapsible');
+            // Auto-expand first context for better UX
+            if (collapsibleHeaders.length > 0) {
+                toggleCollapse(collapsibleHeaders[0]);
+                
+                // Also expand first few beans in the first context
+                setTimeout(() => {
+                    const beanHeaders = document.querySelectorAll('.bean-header');
+                    for (let i = 0; i < Math.min(2, beanHeaders.length); i++) {
+                        toggleBeanProperties(beanHeaders[i]);
+                    }
+                }, 100);
             }
         });
     </script>
