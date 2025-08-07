@@ -12,6 +12,7 @@ import org.springframework.boot.actuate.env.EnvironmentEndpoint;
 import org.springframework.boot.actuate.web.mappings.MappingsEndpoint;
 import org.springframework.boot.actuate.context.properties.ConfigurationPropertiesReportEndpoint;
 import org.springframework.boot.actuate.beans.BeansEndpoint;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,6 +20,10 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.client.RestTemplate;
+
+import jakarta.validation.Valid;
+import java.util.*;
+import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -216,6 +221,147 @@ public class AdminController {
     @GetMapping("/actuator")
     public String actuatorDashboard() {
         return "actuator-dashboard";
+    }
+    
+    @GetMapping("/actuator/endpoints")
+    @SuppressWarnings("unchecked")
+    public String allEndpoints(Model model) {
+        try {
+            // Get all available actuator endpoints
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<Map> response = restTemplate.getForEntity("http://localhost:8081/actuator", Map.class);
+            Map<String, Object> actuatorData = response.getBody();
+            
+            if (actuatorData != null && actuatorData.containsKey("_links")) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> links = (Map<String, Object>) actuatorData.get("_links");
+                
+                // Process endpoints and add metadata
+                Map<String, Map<String, Object>> endpoints = new LinkedHashMap<>();
+                
+                for (Map.Entry<String, Object> entry : links.entrySet()) {
+                    String endpointName = entry.getKey();
+                    if (!"self".equals(endpointName)) {
+                        Map<String, Object> endpointInfo = new HashMap<>();
+                        endpointInfo.put("name", endpointName);
+                        endpointInfo.put("displayName", formatEndpointName(endpointName));
+                        endpointInfo.put("description", getEndpointDescription(endpointName));
+                        endpointInfo.put("category", getEndpointCategory(endpointName));
+                        endpointInfo.put("icon", getEndpointIcon(endpointName));
+                        endpointInfo.put("url", getEndpointUrl(endpointName));
+                        endpointInfo.put("available", true);
+                        
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> linkData = (Map<String, Object>) entry.getValue();
+                        if (linkData.containsKey("href")) {
+                            endpointInfo.put("href", linkData.get("href"));
+                        }
+                        
+                        endpoints.put(endpointName, endpointInfo);
+                    }
+                }
+                
+                model.addAttribute("endpoints", endpoints);
+                model.addAttribute("totalEndpoints", endpoints.size());
+                
+                // Group endpoints by category
+                Map<String, List<Map<String, Object>>> endpointsByCategory = endpoints.values().stream()
+                    .collect(Collectors.groupingBy(
+                        endpoint -> (String) endpoint.get("category"),
+                        LinkedHashMap::new,
+                        Collectors.toList()
+                    ));
+                
+                model.addAttribute("endpointsByCategory", endpointsByCategory);
+                
+            } else {
+                model.addAttribute("error", "No actuator endpoints found");
+            }
+            
+        } catch (Exception e) {
+            model.addAttribute("error", "Failed to fetch actuator endpoints: " + e.getMessage());
+        }
+        
+        return "endpoints-overview";
+    }
+    
+    // Helper methods for endpoint metadata
+    private String formatEndpointName(String name) {
+        return Arrays.stream(name.split("(?=[A-Z])"))
+            .map(word -> word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase())
+            .collect(Collectors.joining(" "));
+    }
+    
+    private String getEndpointDescription(String name) {
+        switch (name.toLowerCase()) {
+            case "health": return "Application health indicators and status checks";
+            case "info": return "Application information and build details";
+            case "metrics": return "Application metrics and performance counters";
+            case "env": case "environment": return "Environment properties and configuration";
+            case "mappings": return "Request mappings and route information";
+            case "configprops": return "Configuration properties and their sources";
+            case "beans": return "Spring beans and their dependencies";
+            case "threaddump": return "Thread dump and stack trace analysis";
+            case "loggers": return "Logger configuration and levels";
+            case "scheduledtasks": return "Scheduled tasks and cron jobs";
+            case "sessions": return "Active user sessions (if available)";
+            case "flyway": return "Flyway database migration information";
+            case "liquibase": return "Liquibase database changelog information";
+            case "caches": return "Cache statistics and management";
+            case "conditions": return "Auto-configuration condition evaluation";
+            case "shutdown": return "Graceful application shutdown endpoint";
+            default: return "Actuator endpoint for " + formatEndpointName(name).toLowerCase();
+        }
+    }
+    
+    private String getEndpointCategory(String name) {
+        switch (name.toLowerCase()) {
+            case "health": case "info": case "metrics": return "Monitoring";
+            case "env": case "environment": case "configprops": return "Configuration";
+            case "mappings": case "beans": return "Application Structure";
+            case "threaddump": case "loggers": return "Diagnostics";
+            case "scheduledtasks": case "sessions": return "Runtime";
+            case "flyway": case "liquibase": return "Database";
+            case "caches": return "Performance";
+            case "conditions": return "Auto-Configuration";
+            case "shutdown": return "Management";
+            default: return "Other";
+        }
+    }
+    
+    private String getEndpointIcon(String name) {
+        switch (name.toLowerCase()) {
+            case "health": return "favorite";
+            case "info": return "info";
+            case "metrics": return "assessment";
+            case "env": case "environment": return "settings";
+            case "mappings": return "map";
+            case "configprops": return "tune";
+            case "beans": return "account_tree";
+            case "threaddump": return "psychology";
+            case "loggers": return "bug_report";
+            case "scheduledtasks": return "schedule";
+            case "sessions": return "people";
+            case "flyway": case "liquibase": return "storage";
+            case "caches": return "memory";
+            case "conditions": return "rule";
+            case "shutdown": return "power_settings_new";
+            default: return "extension";
+        }
+    }
+    
+    private String getEndpointUrl(String name) {
+        switch (name.toLowerCase()) {
+            case "env": case "environment": return "/admin/actuator/environment-detail";
+            case "mappings": return "/admin/actuator/mappings-detail";
+            case "configprops": return "/admin/actuator/configprops-detail";
+            case "beans": return "/admin/actuator/beans-detail";
+            case "threaddump": return "/admin/actuator/threaddump-detail";
+            case "health": return "/admin/actuator/health-detail";
+            case "info": return "/admin/actuator/info-detail";
+            case "metrics": return "/admin/actuator/metrics-detail";
+            default: return "#";
+        }
     }
     
     @GetMapping("/actuator/health-detail")
