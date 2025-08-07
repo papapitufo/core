@@ -508,7 +508,7 @@
         <span class="separator">></span>
         <a th:href="@{/admin/actuator}">Actuator</a>
         <span class="separator">></span>
-        <span>Environment Configuration</span>
+        <span>Thread Dump</span>
     </div>
 
     <!-- Main Content -->
@@ -643,7 +643,7 @@
                                 <div class="stack-trace">
                                     <div class="stack-frame" th:each="frame, iterStat : ${thread.stackTrace}" 
                                          th:classappend="${iterStat.index == 0} ? 'highlight' : ''">
-                                        <span th:text="${frame.className + '.' + frame.methodName + '(' + (frame.fileName != null ? frame.fileName + ':' + frame.lineNumber : 'Unknown Source') + ')'}">Stack Frame</span>
+                                        <span th:text="${frame['className'] + '.' + frame['methodName'] + '(' + (frame['fileName'] != null ? frame['fileName'] + ':' + frame['lineNumber'] : 'Unknown Source') + ')'}">Stack Frame</span>
                                     </div>
                                 </div>
                             </div>

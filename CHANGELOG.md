@@ -5,6 +5,76 @@ All notable changes to the Core Auth Starter project will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.20] - 2025-08-06
+
+### ✨ Added
+
+#### Complete Actuator Endpoints Overview
+- **All Endpoints Overview Page** - Comprehensive catalog of all available Spring Boot actuator endpoints
+- **Categorized Organization** - Endpoints grouped by functionality (Monitoring, Configuration, Diagnostics, Runtime, Database, Performance, etc.)
+- **Interactive Endpoint Cards** - Click-through navigation with status indicators and descriptions
+- **Advanced Search Functionality** - Real-time search across endpoint names, descriptions, and categories with highlighting
+- **Professional Material UI Styling** - Consistent design language across all actuator views
+
+#### Enhanced Navigation & User Experience
+- **Improved Breadcrumb Navigation** - Consistent navigation paths across all actuator views
+- **Unified Dashboard Integration** - Seamless navigation from main actuator dashboard to detailed endpoint views
+- **Responsive Design** - Optimized for desktop and mobile viewing with adaptive layouts
+- **Smart Endpoint Detection** - Automatic discovery and categorization of available actuator endpoints
+
+### 🔧 Fixed
+
+#### Template Processing Issues
+- **Fixed Thread Dump Stack Trace Rendering** - Resolved SpringEL property access issues for LinkedHashMap objects from JSON responses
+- **Corrected Property Access Patterns** - Changed from object notation to map notation for actuator JSON data (`frame.property` → `frame['property']`)
+- **Enhanced Error Handling** - Improved graceful degradation when actuator endpoints are unavailable
+
+#### UI/UX Improvements
+- **Fixed Breadcrumb Consistency** - Corrected "Thread Dump" page breadcrumb navigation
+- **Improved Card Navigation** - Updated existing "All Endpoints" card to navigate to organized overview instead of raw JSON
+- **Enhanced Search Coordination** - Better state management between search functionality and filtering
+
+### 📊 Enhanced Monitoring Capabilities
+
+#### Endpoint Categories & Metadata
+- **Monitoring** - Health checks, application info, and performance metrics
+- **Configuration** - Environment properties and configuration management
+- **Application Structure** - Request mappings and Spring bean analysis
+- **Diagnostics** - Thread dumps and logger configuration
+- **Runtime** - Scheduled tasks and session management
+- **Database** - Migration tracking (Flyway, Liquibase)
+- **Performance** - Cache statistics and optimization
+- **Auto-Configuration** - Condition evaluation and debugging
+- **Management** - Application lifecycle controls
+
+#### Smart Endpoint Discovery
+- **Automatic Categorization** - Intelligent grouping of endpoints by their purpose and functionality
+- **Dynamic Status Detection** - Real-time availability checking with visual indicators
+- **Metadata Enrichment** - Descriptive information and appropriate icons for each endpoint
+- **URL Mapping** - Direct navigation to detailed views where available
+
+### 🎯 Technical Improvements
+
+#### Controller Enhancements
+- **RestTemplate Integration** - Consistent approach for actuator data fetching across all endpoints
+- **Helper Method Library** - Reusable utilities for endpoint formatting, categorization, and metadata generation
+- **Error Handling** - Comprehensive exception management with user-friendly error messages
+- **Performance Optimization** - Efficient data processing and caching strategies
+
+#### Template Architecture
+- **Modular Design** - Reusable components and consistent styling patterns
+- **Search & Filter Logic** - Advanced JavaScript for real-time content filtering and highlighting
+- **Accessibility** - Proper ARIA labels and keyboard navigation support
+- **SEO Optimization** - Semantic HTML structure and proper meta tags
+
+### 📖 Documentation
+
+#### Updated Feature Documentation
+- **Complete Actuator Integration Guide** - Step-by-step setup and configuration instructions
+- **Endpoint Reference** - Comprehensive documentation of all available monitoring capabilities
+- **Troubleshooting Guide** - Common issues and resolution strategies
+- **Best Practices** - Recommendations for production monitoring setups
+
 ## [1.0.19] - 2025-08-05
 
 ### ✨ Added

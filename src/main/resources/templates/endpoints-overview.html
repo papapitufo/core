@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Endpoints - Core Application</title>
+    
+    <!-- Material UI CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Custom CSS for Material UI-like styling -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            color: #212121;
+            line-height: 1.5;
+        }
+        
+        .header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #1976d2;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 0.875rem;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background-color: #1976d2;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1565c0;
+        }
+        
+        .btn-secondary {
+            background-color: #f5f5f5;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #eeeeee;
+        }
+        
+        .btn-success {
+            background-color: #4caf50;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #45a049;
+        }
+        
+        .breadcrumbs {
+            background: white;
+            padding: 12px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.875rem;
+        }
+        
+        .breadcrumbs a {
+            color: #1976d2;
+            text-decoration: none;
+        }
+        
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+        
+        .breadcrumbs .separator {
+            margin: 0 8px;
+            color: #999;
+        }
+        
+        .main-content {
+            padding: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 400;
+            color: #212121;
+        }
+        
+        .page-subtitle {
+            color: #666;
+            font-size: 1rem;
+            margin-top: 4px;
+        }
+        
+        .search-container {
+            position: relative;
+            margin-bottom: 24px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 48px 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            background: white;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #1976d2;
+            box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 500;
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .category-section {
+            margin-bottom: 32px;
+        }
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding: 12px 0;
+            border-bottom: 2px solid #1976d2;
+        }
+        
+        .category-title {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: #1976d2;
+        }
+        
+        .category-count {
+            background-color: #1976d2;
+            color: white;
+            border-radius: 16px;
+            padding: 4px 12px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .endpoints-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+        
+        .endpoint-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .endpoint-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .endpoint-card.unavailable {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .endpoint-card.unavailable:hover {
+            transform: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .endpoint-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .endpoint-icon {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .endpoint-title {
+            font-size: 1.125rem;
+            font-weight: 500;
+            color: #212121;
+        }
+        
+        .endpoint-body {
+            padding: 16px 20px;
+        }
+        
+        .endpoint-description {
+            color: #666;
+            font-size: 0.875rem;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+        
+        .endpoint-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .status-indicator.available {
+            background-color: #4caf50;
+        }
+        
+        .status-indicator.unavailable {
+            background-color: #f44336;
+        }
+        
+        .error-card {
+            background: #ffebee;
+            border: 1px solid #f8bbd9;
+            color: #c62828;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .no-data {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .highlight {
+            background-color: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 16px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+            
+            .endpoints-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-title {
+                font-size: 1.5rem;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-title">Core Application</div>
+        <div class="header-actions">
+            <div class="user-info" sec:authorize="isAuthenticated()">
+                <span class="material-icons">account_circle</span>
+                <span sec:authentication="name">User</span>
+            </div>
+            <a href="/admin/dashboard" class="btn btn-secondary">
+                <span class="material-icons">dashboard</span>
+                Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Breadcrumbs -->
+    <div class="breadcrumbs">
+        <a th:href="@{/dashboard}">Dashboard</a>
+        <span class="separator">></span>
+        <a th:href="@{/admin/actuator}">Actuator</a>
+        <span class="separator">></span>
+        <span>All Endpoints</span>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">All Actuator Endpoints</h1>
+                <p class="page-subtitle">Complete overview of all available monitoring and management endpoints</p>
+            </div>
+            <button onclick="location.reload()" class="btn btn-success">
+                <span class="material-icons">refresh</span>
+                Refresh
+            </button>
+        </div>
+
+        <!-- Error Display -->
+        <div th:if="${error}" class="error-card">
+            <h3>Error</h3>
+            <p th:text="${error}"></p>
+        </div>
+
+        <!-- Statistics -->
+        <div th:unless="${error}" class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" th:text="${totalEndpoints ?: 0}">0</div>
+                <div class="stat-label">Total Endpoints</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value" th:text="${#maps.size(endpointsByCategory ?: {})}">0</div>
+                <div class="stat-label">Categories</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value" th:text="${totalEndpoints ?: 0}">0</div>
+                <div class="stat-label">Available</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Unavailable</div>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div th:unless="${error}" class="search-container">
+            <input type="text" 
+                   id="searchInput" 
+                   class="search-input"
+                   placeholder="Search endpoints by name, description, or category...">
+            <span class="material-icons search-icon">search</span>
+        </div>
+
+        <!-- Endpoints by Category -->
+        <div th:unless="${error}">
+            <div th:each="categoryEntry : ${endpointsByCategory}" class="category-section">
+                <div class="category-header">
+                    <h2 class="category-title" th:text="${categoryEntry.key}">Category</h2>
+                    <span class="category-count" th:text="${#lists.size(categoryEntry.value)}">0</span>
+                </div>
+                
+                <div class="endpoints-grid">
+                    <a th:each="endpoint : ${categoryEntry.value}" 
+                       th:href="${endpoint.url != '#' ? endpoint.url : 'javascript:void(0)'}"
+                       th:class="${'endpoint-card' + (endpoint.url == '#' ? ' unavailable' : '')}"
+                       th:attr="data-endpoint-name=${endpoint.name},data-endpoint-description=${endpoint.description},data-endpoint-category=${endpoint.category}">
+                        
+                        <div class="endpoint-header">
+                            <div class="endpoint-icon">
+                                <span class="material-icons" th:text="${endpoint.icon}">extension</span>
+                            </div>
+                            <h3 class="endpoint-title" th:text="${endpoint.displayName}">Endpoint Name</h3>
+                        </div>
+                        
+                        <div class="endpoint-body">
+                            <p class="endpoint-description" th:text="${endpoint.description}">Endpoint description</p>
+                            <div class="endpoint-status">
+                                <span th:class="${'status-indicator ' + (endpoint.url != '#' ? 'available' : 'unavailable')}"></span>
+                                <span th:text="${endpoint.url != '#' ? 'Available' : 'Coming Soon'}">Status</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Data Message -->
+        <div th:if="${error == null and (endpoints == null or #maps.isEmpty(endpoints))}" class="no-data">
+            <span class="material-icons" style="font-size: 3rem; margin-bottom: 16px; color: #ccc;">info</span>
+            <p>No actuator endpoints found. Make sure the actuator is properly configured.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Search functionality
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase().trim();
+                    const endpointCards = document.querySelectorAll('.endpoint-card');
+                    const categoryHeaders = document.querySelectorAll('.category-header');
+                    const categorySections = document.querySelectorAll('.category-section');
+                    
+                    // Clear previous highlights
+                    removeAllHighlights();
+                    
+                    endpointCards.forEach(card => {
+                        const endpointName = card.getAttribute('data-endpoint-name')?.toLowerCase() || '';
+                        const endpointDescription = card.getAttribute('data-endpoint-description')?.toLowerCase() || '';
+                        const endpointCategory = card.getAttribute('data-endpoint-category')?.toLowerCase() || '';
+                        
+                        const isVisible = !searchTerm || 
+                                        endpointName.includes(searchTerm) || 
+                                        endpointDescription.includes(searchTerm) || 
+                                        endpointCategory.includes(searchTerm);
+                        
+                        card.style.display = isVisible ? 'block' : 'none';
+                        
+                        // Highlight search terms
+                        if (isVisible && searchTerm) {
+                            highlightText(card, searchTerm);
+                        }
+                    });
+                    
+                    // Hide/show category sections based on visible cards
+                    categorySections.forEach(section => {
+                        const visibleCards = section.querySelectorAll('.endpoint-card[style="display: block"], .endpoint-card:not([style*="display: none"])');
+                        section.style.display = visibleCards.length > 0 ? 'block' : 'none';
+                    });
+                });
+            }
+            
+            function highlightText(element, searchTerm) {
+                const walker = document.createTreeWalker(
+                    element,
+                    NodeFilter.SHOW_TEXT,
+                    {
+                        acceptNode: function(node) {
+                            const parentTag = node.parentNode.tagName;
+                            if (parentTag === 'SCRIPT' || parentTag === 'STYLE') {
+                                return NodeFilter.FILTER_REJECT;
+                            }
+                            return NodeFilter.FILTER_ACCEPT;
+                        }
+                    },
+                    false
+                );
+                
+                const textNodes = [];
+                let node;
+                while (node = walker.nextNode()) {
+                    if (node.textContent.trim().length > 0) {
+                        textNodes.push(node);
+                    }
+                }
+                
+                textNodes.forEach(textNode => {
+                    const text = textNode.textContent;
+                    const regex = new RegExp(`(${escapeRegex(searchTerm)})`, 'gi');
+                    if (regex.test(text)) {
+                        const highlightedText = text.replace(regex, '<span class="highlight">$1</span>');
+                        const wrapper = document.createElement('span');
+                        wrapper.innerHTML = highlightedText;
+                        textNode.parentNode.replaceChild(wrapper, textNode);
+                    }
+                });
+            }
+            
+            function removeAllHighlights() {
+                const highlights = document.querySelectorAll('.highlight');
+                highlights.forEach(highlight => {
+                    const parent = highlight.parentNode;
+                    parent.replaceChild(document.createTextNode(highlight.textContent), highlight);
+                    parent.normalize();
+                });
+            }
+            
+            function escapeRegex(string) {
+                return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+        });
+    </script>
+</body>
+</html>
