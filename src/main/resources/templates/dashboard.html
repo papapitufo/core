@@ -259,6 +259,19 @@
             <div class="card" sec:authorize="hasRole('ADMIN')">
                 <div class="card-header">
                     <div class="card-icon">
+                        <span class="material-icons">admin_panel_settings</span>
+                    </div>
+                    <h3 class="card-title">Roles & Permissions</h3>
+                </div>
+                <div class="card-content">
+                    Configure roles, assign permissions, and manage access control for users and system resources.
+                </div>
+                <a href="/admin/roles" class="btn btn-primary">Manage Roles</a>
+            </div>
+            
+            <div class="card" sec:authorize="hasRole('ADMIN')">
+                <div class="card-header">
+                    <div class="card-icon">
                         <span class="material-icons">analytics</span>
                     </div>
                     <h3 class="card-title">System Monitoring</h3>

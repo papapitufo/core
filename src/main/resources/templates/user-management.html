@@ -651,6 +651,11 @@
                                     title="View History">
                                 <span class="material-icons small">history</span>
                             </button>
+                            <a class="btn btn-small btn-secondary" 
+                               th:href="@{'/admin/users/' + ${user.id} + '/permissions'}"
+                               title="Manage Permissions">
+                                <span class="material-icons small">admin_panel_settings</span>
+                            </a>
                             <button class="btn btn-small" 
                                     th:classappend="${user.enabled} ? 'btn-danger' : 'btn-success'"
                                     th:onclick="'toggleUserStatus(' + ${user.id} + ', ' + ${user.enabled} + ')'"

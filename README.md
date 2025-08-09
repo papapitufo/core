@@ -2,7 +2,7 @@
 
 A comprehensive Spring Boot Starter for authentication and user management with a beautiful Material UI frontend.
 
-[![Version](https://img.shields.io/badge/version-1.0.14-blue.svg)](https://github.com/papapitufo/core/packages)
+[![Version](https://img.shields.io/badge/version-1.0.22-blue.svg)](https://github.com/papapitufo/core/packages)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.3-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://openjdk.java.net/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -13,18 +13,29 @@ A comprehensive Spring Boot Starter for authentication and user management with 
 - Login/Logout functionality with username or email
 - User registration with comprehensive validation
 - Password reset with secure email verification
-- Role-based access control (ADMIN/USER)
+- Advanced Role-Based Access Control (RBAC) with fine-grained permissions
 - Session management and security
+
+🛡️ **Advanced RBAC System** ⭐ **NEW**
+- **Granular Permissions**: Define specific actions like `USER_CREATE`, `REPORT_VIEW`, `SYSTEM_ADMIN`
+- **Role Management**: Create custom roles with permission sets (ADMIN, MODERATOR, USER, etc.)
+- **Direct User Permissions**: Grant additional permissions to individual users
+- **Permission Categories**: Organize permissions by function (User Management, System Monitoring, etc.)
+- **Annotation-Based Security**: Use `@RequirePermission`, `@AdminOnly`, `@RequireOwnership` annotations
+- **Web-Based Admin Interface**: Manage roles, permissions, and user assignments through intuitive UI
 
 👥 **Advanced User Management**
 - Admin dashboard for complete user lifecycle management
+- **Permission Assignment**: Grant direct permissions to users beyond their roles
 - Create, activate, deactivate, and delete users
 - Real-time user search and filtering
 - User activity tracking and last login timestamps
+- **Role Assignment**: Assign multiple roles to users with inheritance
 - Bulk operations support
 
 🎨 **Professional Material UI Frontend**
 - Responsive design that works on all devices
+- **New Admin Interfaces**: Role management, permission management, and category organization
 - Consistent 4px border-radius styling throughout
 - Modal dialogs with real-time validation feedback
 - CSRF protection built-in
@@ -38,8 +49,9 @@ A comprehensive Spring Boot Starter for authentication and user management with 
 
 ⚙️ **Zero-Configuration Setup**
 - Spring Boot Auto-Configuration
-- Automatic database schema creation
-- Default admin user creation
+- Automatic database schema creation with RBAC tables
+- Default admin user creation with full permissions
+- **Default RBAC Setup**: Pre-configured permissions and roles for immediate use
 - Sensible security defaults
 
 ## 📦 Installation
@@ -63,13 +75,15 @@ repositories {
     }
 }
 
+```kotlin
 dependencies {
-    implementation("com.control:core-auth-starter:1.0.14")
+    implementation("com.control:core-auth-starter:1.0.22")
     runtimeOnly("org.postgresql:postgresql") // or your preferred database
     
     // Required for email functionality (password reset emails)
     implementation("org.springframework.boot:spring-boot-starter-mail")
 }
+```
 ```
 
 ### Maven
@@ -106,7 +120,7 @@ If you want to use the password reset feature, you must add the mail starter dep
 ```kotlin
 // Gradle
 dependencies {
-    implementation("com.control:core-auth-starter:1.0.14")
+    implementation("com.control:core-auth-starter:1.0.22")
     implementation("org.springframework.boot:spring-boot-starter-mail") // Required for email
     runtimeOnly("org.postgresql:postgresql") // or your preferred database
 }
@@ -118,7 +132,7 @@ dependencies {
     <dependency>
         <groupId>com.control</groupId>
         <artifactId>core-auth-starter</artifactId>
-        <version>1.0.14</version>
+        <version>1.0.22</version>
     </dependency>
     <!-- Required for email functionality -->
     <dependency>
@@ -134,7 +148,7 @@ If you don't need password reset emails, you can skip the mail dependency:
 ```kotlin
 // Gradle - Basic auth without email
 dependencies {
-    implementation("com.control:core-auth-starter:1.0.14")
+    implementation("com.control:core-auth-starter:1.0.22")
     runtimeOnly("org.postgresql:postgresql") // or your preferred database
 }
 ```
@@ -204,10 +218,97 @@ That's it! Your application now includes:
 | `/signup` | User registration | Public | Validation, duplicate prevention |
 | `/dashboard` | User dashboard | Authenticated | Profile info, last login |
 | `/admin/users` | User management | Admin only | CRUD operations, search, activate/deactivate |
+| `/admin/roles` | **Role management** ⭐ **NEW** | Admin only | Create roles, assign permissions, role deletion |
+| `/admin/permissions` | **Permission management** ⭐ **NEW** | Admin only | Create permissions, manage categories, delete permissions |
+| `/admin/users/{id}/permissions` | **User permissions** ⭐ **NEW** | Admin only | Assign direct permissions, view effective permissions |
 | `/admin/actuator` | System monitoring | Admin only | Spring Boot Actuator dashboard |
 | `/forgot-password` | Password reset request | Public | Email-based token generation |
 | `/reset-password` | Password reset form | Public | Secure token validation |
 | `/logout` | User logout | Authenticated | Session cleanup |
+
+## 🛡️ Role-Based Access Control (RBAC)
+
+The Core Auth Starter now includes a comprehensive RBAC system for fine-grained access control. See the complete [**RBAC Guide**](RBAC_GUIDE.md) for detailed documentation.
+
+### 🚀 Quick RBAC Examples
+
+**Method-Level Security with Permissions:**
+```java
+@RestController
+public class UserController {
+    
+    @PreAuthorize("@authorizationService.hasPermission(authentication, 'USER_CREATE')")
+    @PostMapping("/users")
+    public ResponseEntity<User> createUser(@RequestBody CreateUserRequest request) {
+        // Only users with USER_CREATE permission can access
+    }
+    
+    @RequirePermission("USER_DELETE")
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        // Clean annotation-based permission check
+    }
+    
+    @AdminOnly
+    @GetMapping("/admin/reports")
+    public ResponseEntity<List<Report>> getAdminReports() {
+        // Admin-only access
+    }
+}
+```
+
+**Programmatic Permission Checks:**
+```java
+@Service
+public class BusinessService {
+    
+    private final AuthorizationService authorizationService;
+    
+    public void performAction(Authentication auth) {
+        if (authorizationService.hasPermission(auth, "SPECIAL_ACTION")) {
+            // User has permission
+        }
+        
+        if (authorizationService.hasAnyPermission(auth, "PERM_A", "PERM_B")) {
+            // User has at least one permission
+        }
+        
+        if (authorizationService.canAccessAdmin(auth)) {
+            // User can access admin functions
+        }
+    }
+}
+```
+
+### 🎛️ RBAC Admin Interface
+
+Access the new admin interfaces:
+- **`/admin/roles`** - Create and manage roles, assign permissions to roles
+- **`/admin/permissions`** - Create permissions, organize by categories  
+- **`/admin/users/{id}/permissions`** - Assign direct permissions to individual users
+
+### 📊 Default RBAC Setup
+
+The system comes pre-configured with:
+
+**Default Roles:**
+- **ADMIN** - Full system access with all permissions
+- **USER** - Basic access (dashboard, health checks)
+- **MODERATOR** - Intermediate access (user viewing, basic monitoring)
+
+**Permission Categories:**
+- **USER_MANAGEMENT** - User CRUD operations, permission management
+- **ROLE_MANAGEMENT** - Role CRUD operations, permission assignment
+- **SYSTEM_MONITORING** - Actuator endpoints, health checks, metrics
+- **PERMISSION_MANAGEMENT** - Permission CRUD operations
+- **SYSTEM_ADMINISTRATION** - General admin functions, dashboard access
+
+**Migration from Simple Roles:**
+- ✅ **100% Backward Compatible** - Existing role-based code continues to work
+- ✅ **Additive Enhancement** - New permission system works alongside existing roles
+- ✅ **Gradual Migration** - Migrate to permission-based security at your own pace
+
+For complete RBAC documentation, examples, and best practices, see: **[RBAC_GUIDE.md](RBAC_GUIDE.md)**
 
 ## 📊 System Monitoring with Spring Boot Actuator
 
@@ -1480,7 +1581,26 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📝 Version History
 
-### v1.0.14 (Latest)
+### v1.0.22 (Latest) ⭐ **MAJOR RBAC UPDATE**
+- **🛡️ NEW: Complete Role-Based Access Control (RBAC) System**
+  - Granular permissions system with categories (USER_MANAGEMENT, SYSTEM_MONITORING, etc.)
+  - Role management with permission inheritance
+  - Direct user permissions beyond role-based permissions
+  - Admin interfaces for roles (`/admin/roles`), permissions (`/admin/permissions`), and user permissions (`/admin/users/{id}/permissions`)
+- **🔐 NEW: Security Annotations**
+  - `@RequirePermission("PERMISSION_NAME")` for method-level security
+  - `@AdminOnly` for admin-only access
+  - `@RequireOwnership` for owner-or-admin access patterns
+- **⚙️ NEW: Authorization Service**
+  - Programmatic permission checking with `AuthorizationService`
+  - Methods: `hasPermission()`, `hasAnyPermission()`, `hasAllPermissions()`, `canAccessAdmin()`
+- **🗄️ Database Schema**: Automatic RBAC table creation (permissions, roles, junction tables)
+- **📚 Documentation**: Comprehensive [RBAC Guide](RBAC_GUIDE.md) with examples and best practices
+- **🔄 Migration**: 100% backward compatible - existing role-based code continues to work
+- **🎨 UI Enhancements**: Material Design admin interfaces for complete RBAC management
+- **🔧 Default Setup**: Pre-configured permissions, roles, and admin user with full access
+
+### v1.0.14
 - **Added**: Comprehensive System Monitoring dashboard with Spring Boot Actuator integration
 - **Enhanced**: Complete actuator documentation with setup instructions for consumer applications
 - **Added**: Material Design monitoring dashboard with 9 monitoring cards (Health, Info, Metrics, Environment, etc.)

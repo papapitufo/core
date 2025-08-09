@@ -2,7 +2,11 @@ package com.control.core.controller;
 
 import com.control.core.dto.CreateUserRequest;
 import com.control.core.model.User;
+import com.control.core.model.Role;
+import com.control.core.model.Permission;
 import com.control.core.service.UserService;
+import com.control.core.service.RoleService;
+import com.control.core.service.PermissionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.boot.actuate.health.HealthComponent;
@@ -43,6 +47,12 @@ public class AdminController {
     
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private RoleService roleService;
+    
+    @Autowired
+    private PermissionService permissionService;
     
     @Autowired
     private HealthEndpoint healthEndpoint;
@@ -180,7 +190,17 @@ public class AdminController {
         try {
             User user = userService.getUserById(id)
                     .orElseThrow(() -> new RuntimeException("User not found"));
+            List<Role> availableRoles = roleService.findAll();
+            
+            // Create a set of role IDs that the user currently has for easier template comparison
+            Set<Long> userRoleIds = user.getRoles().stream()
+                    .map(Role::getId)
+                    .collect(java.util.stream.Collectors.toSet());
+            
             model.addAttribute("user", user);
+            model.addAttribute("availableRoles", availableRoles);
+            model.addAttribute("userRoleIds", userRoleIds);
+            
             return "edit-user";
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -194,9 +214,10 @@ public class AdminController {
                            @RequestParam String email,
                            @RequestParam String role,
                            @RequestParam(required = false) Boolean enabled,
+                           @RequestParam(value = "roleIds", required = false) Set<Long> roleIds,
                            RedirectAttributes redirectAttributes) {
         try {
-            userService.updateUser(id, username, email, role, enabled != null ? enabled : false);
+            userService.updateUserWithRoles(id, username, email, role, enabled != null ? enabled : false, roleIds);
             redirectAttributes.addFlashAttribute("success", "User updated successfully");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -1352,5 +1373,294 @@ public class AdminController {
         if (metricName.startsWith("hikaricp.")) return "Database";
         if (metricName.startsWith("spring.")) return "Spring";
         return "Other";
+    }
+    
+    // Role and Permission Management Methods
+    
+    @GetMapping("/roles")
+    public String roleManagement(Model model) {
+        List<Role> roles = roleService.findAllWithPermissions();
+        List<Permission> allPermissions = permissionService.findAll();
+        
+        // Calculate statistics
+        long totalRoles = roles.size();
+        long totalPermissions = allPermissions.size();
+        long assignedPermissions = roles.stream()
+            .flatMapToLong(role -> role.getPermissions().stream().mapToLong(p -> 1L))
+            .sum();
+        
+        model.addAttribute("roles", roles);
+        model.addAttribute("allPermissions", allPermissions);
+        model.addAttribute("totalRoles", totalRoles);
+        model.addAttribute("totalPermissions", totalPermissions);
+        model.addAttribute("assignedPermissions", assignedPermissions);
+        
+        // Group permissions by category
+        Map<String, List<Permission>> permissionsByCategory = permissionService.findAllByCategory();
+        model.addAttribute("permissionsByCategory", permissionsByCategory);
+        
+        return "role-management";
+    }
+    
+    @PostMapping("/roles/create")
+    public String createRole(@RequestParam String name,
+                            @RequestParam String description,
+                            RedirectAttributes redirectAttributes) {
+        try {
+            roleService.create(name, description);
+            redirectAttributes.addFlashAttribute("success", "Role '" + name + "' created successfully");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed to create role: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/roles";
+    }
+    
+    @PostMapping("/roles/{id}/permissions")
+    public String updateRolePermissions(@PathVariable Long id,
+                                       @RequestParam(required = false) List<Long> permissionIds,
+                                       RedirectAttributes redirectAttributes) {
+        try {
+            Set<Long> permissionSet = permissionIds != null ? new HashSet<>(permissionIds) : new HashSet<>();
+            roleService.updateRolePermissions(id, permissionSet);
+            redirectAttributes.addFlashAttribute("success", "Role permissions updated successfully");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed to update role permissions: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/roles";
+    }
+    
+    @PostMapping("/roles/{id}/delete")
+    public String deleteRole(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            roleService.delete(id);
+            redirectAttributes.addFlashAttribute("success", "Role deleted successfully");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed to delete role: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/roles";
+    }
+    
+    @GetMapping("/permissions")
+    public String permissionManagement(Model model) {
+        List<Permission> permissions = permissionService.findAll();
+        List<String> categories = permissionService.findAllCategories();
+        
+        // Calculate statistics
+        long totalPermissions = permissions.size();
+        long totalCategories = categories.size();
+        
+        model.addAttribute("permissions", permissions);
+        model.addAttribute("categories", categories);
+        model.addAttribute("totalPermissions", totalPermissions);
+        model.addAttribute("totalCategories", totalCategories);
+        
+        // Group permissions by category
+        Map<String, List<Permission>> permissionsByCategory = permissionService.findAllByCategory();
+        model.addAttribute("permissionsByCategory", permissionsByCategory);
+        
+        return "permission-management";
+    }
+    
+    @PostMapping("/permissions/create")
+    public String createPermission(@RequestParam String name,
+                                  @RequestParam String description,
+                                  @RequestParam String category,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            permissionService.create(name, description, category);
+            redirectAttributes.addFlashAttribute("success", "Permission '" + name + "' created successfully");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed to create permission: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/permissions";
+    }
+    
+    @PostMapping("/permissions/{id}/delete")
+    public String deletePermission(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            permissionService.delete(id);
+            redirectAttributes.addFlashAttribute("success", "Permission deleted successfully");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed to delete permission: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/permissions";
+    }
+    
+    @GetMapping("/users/{id}/permissions")
+    public String userPermissions(@PathVariable Long id, Model model) {
+        try {
+            User user = userService.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            List<Permission> allPermissions = permissionService.findAll();
+            List<Role> allRoles = roleService.findAll();
+            
+            // Create a set of permission IDs that the user currently has (direct permissions) for easier template comparison
+            Set<Long> userDirectPermissionIds = user.getDirectPermissions().stream()
+                    .map(Permission::getId)
+                    .collect(java.util.stream.Collectors.toSet());
+            
+            model.addAttribute("user", user);
+            model.addAttribute("allPermissions", allPermissions);
+            model.addAttribute("allRoles", allRoles);
+            model.addAttribute("userDirectPermissionIds", userDirectPermissionIds);
+            
+            // Group permissions by category for better display
+            Map<String, List<Permission>> permissionsByCategory = permissionService.findAllByCategory();
+            model.addAttribute("permissionsByCategory", permissionsByCategory);
+            
+            return "user-permissions";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "redirect:/admin/users";
+        }
+    }
+    
+    @PostMapping("/users/{id}/permissions")
+    public String updateUserPermissions(@PathVariable Long id,
+                                       @RequestParam(required = false) List<Long> permissionIds,
+                                       @RequestParam(required = false) List<Long> roleIds,
+                                       RedirectAttributes redirectAttributes) {
+        try {
+            // Update direct permissions
+            userService.updateDirectPermissions(id, permissionIds);
+            
+            // Update user roles (if needed - this would require additional UserService methods)
+            // For now, we'll focus on direct permissions
+            
+            redirectAttributes.addFlashAttribute("success", "User permissions updated successfully");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed to update user permissions: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/users/" + id + "/permissions";
+    }
+    
+    // =============================================
+    // Category Management
+    // =============================================
+    
+    @PostMapping("/permissions/categories/create")
+    public String createCategory(@RequestParam String categoryName, 
+                                @RequestParam(required = false) String categoryDescription,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            if (categoryName == null || categoryName.trim().isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Category name is required");
+                return "redirect:/admin/permissions";
+            }
+            
+            String normalizedName = categoryName.trim().toUpperCase().replace(" ", "_");
+            
+            // Check if category already exists
+            List<String> existingCategories = permissionService.findAllCategories();
+            if (existingCategories.contains(normalizedName)) {
+                redirectAttributes.addFlashAttribute("error", "Category '" + normalizedName + "' already exists");
+                return "redirect:/admin/permissions";
+            }
+            
+            // For now, we'll create a placeholder permission to establish the category
+            // This is a simple approach - in a more complex system, you might have a separate Category entity
+            String placeholderName = "CATEGORY_" + normalizedName + "_PLACEHOLDER";
+            String description = categoryDescription != null && !categoryDescription.trim().isEmpty() 
+                ? categoryDescription.trim() 
+                : "Placeholder permission for " + normalizedName + " category";
+                
+            permissionService.create(placeholderName, description, normalizedName);
+            redirectAttributes.addFlashAttribute("success", "Category '" + normalizedName + "' created successfully");
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed to create category: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/permissions";
+    }
+    
+    @PostMapping("/permissions/categories/{categoryName}/rename")
+    public String renameCategory(@PathVariable String categoryName,
+                               @RequestParam String newCategoryName,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            if (newCategoryName == null || newCategoryName.trim().isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "New category name is required");
+                return "redirect:/admin/permissions";
+            }
+            
+            String normalizedNewName = newCategoryName.trim().toUpperCase().replace(" ", "_");
+            
+            // Check if new category name already exists
+            List<String> existingCategories = permissionService.findAllCategories();
+            if (existingCategories.contains(normalizedNewName)) {
+                redirectAttributes.addFlashAttribute("error", "Category '" + normalizedNewName + "' already exists");
+                return "redirect:/admin/permissions";
+            }
+            
+            // Update all permissions in this category
+            List<Permission> permissionsInCategory = permissionService.findAllByCategory().get(categoryName);
+            if (permissionsInCategory != null) {
+                for (Permission permission : permissionsInCategory) {
+                    permission.setCategory(normalizedNewName);
+                    permissionService.save(permission);
+                }
+                
+                redirectAttributes.addFlashAttribute("success", 
+                    "Category renamed from '" + categoryName + "' to '" + normalizedNewName + "' (" + 
+                    permissionsInCategory.size() + " permissions updated)");
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Category '" + categoryName + "' not found");
+            }
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed to rename category: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/permissions";
+    }
+    
+    @PostMapping("/permissions/categories/{categoryName}/delete")
+    public String deleteCategory(@PathVariable String categoryName,
+                               @RequestParam(required = false) String moveToCategory,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            List<Permission> permissionsInCategory = permissionService.findAllByCategory().get(categoryName);
+            
+            if (permissionsInCategory == null || permissionsInCategory.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Category '" + categoryName + "' not found or is empty");
+                return "redirect:/admin/permissions";
+            }
+            
+            if (moveToCategory != null && !moveToCategory.trim().isEmpty()) {
+                // Move permissions to another category
+                String normalizedMoveToCategory = moveToCategory.trim().toUpperCase().replace(" ", "_");
+                
+                for (Permission permission : permissionsInCategory) {
+                    permission.setCategory(normalizedMoveToCategory);
+                    permissionService.save(permission);
+                }
+                
+                redirectAttributes.addFlashAttribute("success", 
+                    "Category '" + categoryName + "' deleted and " + permissionsInCategory.size() + 
+                    " permissions moved to '" + normalizedMoveToCategory + "'");
+            } else {
+                // Delete all permissions in the category
+                for (Permission permission : permissionsInCategory) {
+                    permissionService.delete(permission.getId());
+                }
+                
+                redirectAttributes.addFlashAttribute("success", 
+                    "Category '" + categoryName + "' and " + permissionsInCategory.size() + 
+                    " permissions deleted successfully");
+            }
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed to delete category: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/permissions";
     }
 }

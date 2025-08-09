@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Permissions - Core Application</title>
+    
+    <!-- Material UI CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            color: #212121;
+            line-height: 1.5;
+        }
+        
+        .header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #1976d2;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 0.875rem;
+        }
+        
+        .breadcrumbs {
+            background: white;
+            padding: 12px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.875rem;
+        }
+        
+        .breadcrumbs a {
+            color: #1976d2;
+            text-decoration: none;
+        }
+        
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+        
+        .breadcrumbs .separator {
+            margin: 0 8px;
+            color: #999;
+        }
+        
+        .main-content {
+            padding: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 400;
+            color: #212121;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background-color: #1976d2;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1565c0;
+        }
+        
+        .btn-secondary {
+            background-color: #f5f5f5;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #eeeeee;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fafafa;
+        }
+        
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 500;
+            color: #212121;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .user-info-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+        
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            background: #1976d2;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .user-details h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #212121;
+        }
+        
+        .user-details p {
+            margin: 4px 0 0 0;
+            color: #666;
+        }
+        
+        .permissions-section {
+            margin-bottom: 32px;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .permission-category {
+            margin-bottom: 24px;
+        }
+        
+        .category-header {
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+        
+        .category-title {
+            font-weight: 500;
+            color: #1976d2;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .permission-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 8px;
+        }
+        
+        .permission-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.2s ease;
+        }
+        
+        .permission-checkbox:hover {
+            background: #f8f9fa;
+            border-color: #1976d2;
+        }
+        
+        .permission-checkbox input[type="checkbox"] {
+            margin: 0;
+        }
+        
+        .permission-checkbox label {
+            margin: 0;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .permission-name {
+            font-weight: 500;
+            font-size: 0.85rem;
+            color: #333;
+        }
+        
+        .permission-description {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 2px;
+        }
+        
+        .permission-badge {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin: 2px;
+            display: inline-block;
+        }
+        
+        .role-permission-badge {
+            background: #fff3e0;
+            color: #f57c00;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin: 2px;
+            display: inline-block;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .alert-success {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+        
+        .alert-error {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 16px;
+            }
+            
+            .permission-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .user-info-section {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-title">
+            <i class="material-icons" style="margin-right: 8px;">person</i>
+            Core Application
+        </div>
+        <div class="header-actions">
+            <div class="user-info">
+                <i class="material-icons">account_circle</i>
+                <span sec:authentication="name">User</span>
+            </div>
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <button type="submit" class="btn btn-secondary">
+                    <i class="material-icons">logout</i>
+                    Logout
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Breadcrumbs -->
+    <div class="breadcrumbs">
+        <a th:href="@{/dashboard}">Dashboard</a>
+        <span class="separator">></span>
+        <a th:href="@{/admin/users}">User Management</a>
+        <span class="separator">></span>
+        <span>User Permissions</span>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="material-icons" style="margin-right: 12px; vertical-align: middle;">person</i>
+                User Permissions
+            </h1>
+            <a th:href="@{/admin/users}" class="btn btn-secondary">
+                <i class="material-icons">arrow_back</i>
+                Back to Users
+            </a>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div th:if="${success}" class="alert alert-success">
+            <i class="material-icons">check_circle</i>
+            <span th:text="${success}">Success message</span>
+        </div>
+        
+        <div th:if="${error}" class="alert alert-error">
+            <i class="material-icons">error</i>
+            <span th:text="${error}">Error message</span>
+        </div>
+
+        <!-- User Information -->
+        <div class="user-info-section">
+            <div class="user-avatar">
+                <i class="material-icons">person</i>
+            </div>
+            <div class="user-details">
+                <h2 th:text="'Managing permissions for: ' + ${user.username}">User Name</h2>
+                <p th:text="${user.email}">user@example.com</p>
+                <p>
+                    Role: <span th:text="${user.role}" style="font-weight: 500;">USER</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Explanation Card -->
+        <div class="card" style="margin-bottom: 24px; border-left: 4px solid #2196f3;">
+            <div class="card-body">
+                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                    <i class="material-icons" style="color: #2196f3; margin-top: 2px;">info</i>
+                    <div>
+                        <h4 style="margin: 0 0 8px 0; color: #2196f3;">How Permissions Work</h4>
+                        <p style="margin: 0 0 12px 0; color: #666; line-height: 1.5;">
+                            Users receive permissions from two sources:
+                        </p>
+                        <ul style="margin: 0; padding-left: 20px; color: #666; line-height: 1.6;">
+                            <li><strong>Role-based permissions</strong> - Automatically granted through assigned roles (cannot be modified here)</li>
+                            <li><strong>Direct permissions</strong> - Additional permissions granted specifically to this user (editable below)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form th:action="@{'/admin/users/' + ${user.id} + '/permissions'}" method="post">
+            
+            <!-- Permissions from Roles (Read-only display) -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="material-icons">admin_panel_settings</i>
+                        Permissions from Roles
+                        <span style="font-size: 0.75rem; font-weight: normal; color: #666; margin-left: 8px;">(Read-only)</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p style="color: #666; margin-bottom: 16px; font-size: 0.875rem;">
+                        <i class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">info</i>
+                        These permissions are automatically granted through the user's assigned roles. To modify these, change the user's roles or edit the role permissions.
+                    </p>
+                    <div th:each="role : ${user.roles}" style="margin-bottom: 16px;">
+                        <h4 th:text="'Role: ' + ${role.name}" style="color: #f57c00; margin-bottom: 8px;">Role Name</h4>
+                        <div>
+                            <span th:each="permission : ${role.permissions}" 
+                                  th:text="${permission.name}" 
+                                  class="role-permission-badge">Permission</span>
+                            <span th:if="${#lists.isEmpty(role.permissions)}" style="color: #999; font-style: italic;">
+                                No permissions assigned to this role
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div th:if="${#lists.isEmpty(user.roles)}" style="color: #999; font-style: italic;">
+                        No roles assigned to this user
+                    </div>
+                </div>
+            </div>
+
+            <!-- Direct User Permissions (Editable) -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="material-icons">person_add</i>
+                        Additional Direct Permissions
+                        <span style="font-size: 0.75rem; font-weight: normal; color: #666; margin-left: 8px;">(Editable)</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p style="color: #666; margin-bottom: 20px; font-size: 0.875rem;">
+                        <i class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 4px;">edit</i>
+                        Grant additional permissions to this user beyond their role-based permissions. 
+                        <strong>Only permissions checked below will be added as direct permissions.</strong>
+                    </p>
+                    
+                    <div th:each="category : ${permissionsByCategory}" class="permission-category">
+                        <div class="category-header">
+                            <div class="category-title" th:text="${category.key}">Category Name</div>
+                        </div>
+                        <div class="permission-grid">
+                            <div th:each="permission : ${category.value}" class="permission-checkbox">
+                                <input type="checkbox" 
+                                       th:id="'perm_' + ${permission.id}"
+                                       th:name="permissionIds"
+                                       th:value="${permission.id}"
+                                       th:checked="${userDirectPermissionIds != null and userDirectPermissionIds.contains(permission.id)}">
+                                <label th:for="'perm_' + ${permission.id}">
+                                    <div class="permission-name" th:text="${permission.name}">Permission</div>
+                                    <div class="permission-description" th:text="${permission.description}">Description</div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Helper message when no direct permissions are assigned -->
+                    <div th:if="${userDirectPermissionIds == null or #sets.isEmpty(userDirectPermissionIds)}" 
+                         style="background-color: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 4px; padding: 16px; margin-top: 16px; text-align: center;">
+                        <i class="material-icons" style="color: #666; font-size: 20px; margin-bottom: 8px;">info</i>
+                        <p style="margin: 0; color: #666; font-size: 0.875rem;">
+                            This user currently has <strong>no additional direct permissions</strong>.<br>
+                            They receive all their permissions from their assigned roles shown above.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Effective Permissions Summary -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="material-icons">check_circle</i>
+                        Total Effective Permissions
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p style="color: #666; margin-bottom: 16px;">
+                        This user currently has the following permissions (from roles + direct assignments):
+                    </p>
+                    <div>
+                        <span th:each="permission : ${user.getAllPermissions()}" 
+                              th:text="${permission.name}" 
+                              class="permission-badge">Permission</span>
+                        <span th:if="${#lists.isEmpty(user.getAllPermissions())}" style="color: #999; font-style: italic;">
+                            No permissions assigned
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <a th:href="@{/admin/users}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="material-icons">save</i>
+                    Update Permissions
+                </button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
