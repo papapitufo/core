@@ -10,7 +10,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users")
@@ -38,6 +41,22 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String role = "USER";
     
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "user_roles",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
+    
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "user_permissions",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "permission_id")
+    )
+    private Set<Permission> directPermissions = new HashSet<>();
+    
     @Column(nullable = false)
     private boolean enabled = true;
     
@@ -60,7 +79,32 @@ public class User implements UserDetails {
     // UserDetails implementation
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role));
+        Set<GrantedAuthority> authorities = new HashSet<>();
+        
+        // Add role-based authorities
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+        
+        // Add authorities from Role entities
+        if (roles != null) {
+            roles.forEach(roleEntity -> {
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + roleEntity.getName()));
+                // Add permissions from roles
+                if (roleEntity.getPermissions() != null) {
+                    roleEntity.getPermissions().forEach(permission -> 
+                        authorities.add(new SimpleGrantedAuthority(permission.getName()))
+                    );
+                }
+            });
+        }
+        
+        // Add direct permissions
+        if (directPermissions != null) {
+            directPermissions.forEach(permission -> 
+                authorities.add(new SimpleGrantedAuthority(permission.getName()))
+            );
+        }
+        
+        return authorities;
     }
     
     @Override
@@ -142,5 +186,61 @@ public class User implements UserDetails {
     
     public void setLastLogin(LocalDateTime lastLogin) {
         this.lastLogin = lastLogin;
+    }
+    
+    public Set<Role> getRoles() {
+        return roles;
+    }
+    
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
+    
+    public Set<Permission> getDirectPermissions() {
+        return directPermissions;
+    }
+    
+    public void setDirectPermissions(Set<Permission> directPermissions) {
+        this.directPermissions = directPermissions;
+    }
+    
+    /**
+     * Get all permissions for this user (from roles + direct permissions)
+     */
+    public Set<Permission> getAllPermissions() {
+        Set<Permission> allPermissions = new HashSet<>();
+        
+        // Add permissions from roles
+        if (roles != null) {
+            roles.forEach(roleEntity -> {
+                if (roleEntity.getPermissions() != null) {
+                    allPermissions.addAll(roleEntity.getPermissions());
+                }
+            });
+        }
+        
+        // Add direct permissions
+        if (directPermissions != null) {
+            allPermissions.addAll(directPermissions);
+        }
+        
+        return allPermissions;
+    }
+    
+    /**
+     * Check if user has a specific permission (through roles or direct assignment)
+     */
+    public boolean hasPermission(String permissionName) {
+        return getAllPermissions().stream()
+            .anyMatch(permission -> permission.getName().equals(permissionName));
+    }
+    
+    /**
+     * Get all permission names for this user
+     */
+    public Set<String> getPermissionNames() {
+        return getAllPermissions().stream()
+            .map(Permission::getName)
+            .collect(Collectors.toSet());
     }
 }

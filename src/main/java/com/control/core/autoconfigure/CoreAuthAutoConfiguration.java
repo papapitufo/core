@@ -1,8 +1,6 @@
 package com.control.core.autoconfigure;
 
 import com.control.core.security.CustomAuthenticationSuccessHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -16,6 +14,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -35,9 +34,8 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableJpaRepositories(basePackages = "com.control.core.repository")
 @EntityScan(basePackages = "com.control.core.model")
 @ComponentScan(basePackages = "com.control.core")
+@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
 public class CoreAuthAutoConfiguration {
-
-    private static final Logger logger = LoggerFactory.getLogger(CoreAuthAutoConfiguration.class);
 
     /**
      * Provides a default password encoder if none is defined

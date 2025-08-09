@@ -1,7 +1,9 @@
 package com.control.core.autoconfigure;
 
 import com.control.core.model.User;
+import com.control.core.model.Role;
 import com.control.core.repository.UserRepository;
+import com.control.core.repository.RoleRepository;
 import com.control.core.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +30,9 @@ public class DefaultAdminCreator implements CommandLineRunner {
     @Autowired
     private UserRepository userRepository;
     
+    @Autowired
+    private RoleRepository roleRepository;
+    
     @Override
     public void run(String... args) throws Exception {
         CoreAuthProperties.AdminUser adminConfig = properties.getAdmin();
@@ -50,6 +55,16 @@ public class DefaultAdminCreator implements CommandLineRunner {
                 adminConfig.getEmail(),
                 "ADMIN"
             );
+            
+            // Assign ADMIN role to admin user (role created by DataInitializationService)
+            Role adminRole = roleRepository.findByName("ADMIN").orElse(null);
+            if (adminRole != null) {
+                adminUser.getRoles().add(adminRole);
+                userRepository.save(adminUser);
+                logger.info("ADMIN role assigned to admin user: {}", adminUser.getUsername());
+            } else {
+                logger.warn("ADMIN role not found in database. Make sure DataInitializationService runs before this.");
+            }
             
             logger.info("Default admin user created successfully: {}", adminUser.getUsername());
         } catch (Exception e) {
