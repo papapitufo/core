@@ -13,7 +13,6 @@ import org.springframework.boot.actuate.health.HealthComponent;
 import org.springframework.boot.actuate.info.InfoEndpoint;
 import org.springframework.boot.actuate.metrics.MetricsEndpoint;
 import org.springframework.boot.actuate.env.EnvironmentEndpoint;
-import org.springframework.boot.actuate.web.mappings.MappingsEndpoint;
 import org.springframework.boot.actuate.context.properties.ConfigurationPropertiesReportEndpoint;
 import org.springframework.boot.actuate.beans.BeansEndpoint;
 import org.springframework.http.ResponseEntity;
@@ -26,14 +25,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.client.RestTemplate;
 
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import jakarta.validation.Valid;
-import java.util.*;
-import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -246,12 +243,17 @@ public class AdminController {
     
     @GetMapping("/actuator/endpoints")
     @SuppressWarnings("unchecked")
-    public String allEndpoints(Model model) {
+    public String allEndpoints(Model model, HttpServletRequest request) {
         try {
+            // Build absolute URL for actuator endpoint
+            String actuatorUrl = buildAbsoluteActuatorUrl(request, "");
+            
             // Get all available actuator endpoints
             RestTemplate restTemplate = new RestTemplate();
-            ResponseEntity<Map> response = restTemplate.getForEntity("http://localhost:8081/actuator", Map.class);
-            Map<String, Object> actuatorData = response.getBody();
+            @SuppressWarnings("rawtypes")
+            ResponseEntity<Map> response = restTemplate.getForEntity(actuatorUrl, Map.class);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> actuatorData = (Map<String, Object>) response.getBody();
             
             if (actuatorData != null && actuatorData.containsKey("_links")) {
                 @SuppressWarnings("unchecked")
@@ -1281,11 +1283,11 @@ public class AdminController {
     @GetMapping("/actuator/threaddump-detail")
     @PreAuthorize("hasRole('ADMIN')")
     @SuppressWarnings("unchecked")
-    public String threadDumpDetail(Model model) {
+    public String threadDumpDetail(Model model, HttpServletRequest request) {
         try {
             // Use RestTemplate to fetch thread dump data from actuator endpoint
             RestTemplate restTemplate = new RestTemplate();
-            String threadDumpUrl = "http://localhost:8081/actuator/threaddump";
+            String threadDumpUrl = buildAbsoluteActuatorUrl(request, "/threaddump");
             
             // Get thread dump data as Map
             Map<String, Object> threadDumpResponse = restTemplate.getForObject(threadDumpUrl, Map.class);
@@ -1373,6 +1375,19 @@ public class AdminController {
         if (metricName.startsWith("hikaricp.")) return "Database";
         if (metricName.startsWith("spring.")) return "Spring";
         return "Other";
+    }
+    
+    /**
+     * Helper method to build absolute URL for actuator endpoints
+     */
+    private String buildAbsoluteActuatorUrl(HttpServletRequest request, String endpoint) {
+        String scheme = request.getScheme();
+        String serverName = request.getServerName();
+        int serverPort = request.getServerPort();
+        String contextPath = request.getContextPath();
+        
+        String baseUrl = scheme + "://" + serverName + ":" + serverPort + contextPath;
+        return baseUrl + "/actuator" + endpoint;
     }
     
     // Role and Permission Management Methods
