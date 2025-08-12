@@ -72,6 +72,12 @@ public class AdminController {
     @Autowired(required = false)
     private BeansEndpoint beansEndpoint;
     
+    @Autowired(required = false)
+    private org.springframework.boot.actuate.management.ThreadDumpEndpoint threadDumpEndpoint;
+    
+    @Autowired(required = false)
+    private org.springframework.boot.actuate.endpoint.web.WebEndpointsSupplier webEndpointsSupplier;
+    
     @GetMapping("/users")
     public String userManagement(@RequestParam(value = "search", required = false) String search,
                                 @RequestParam(value = "role", required = false) String roleFilter,
@@ -245,61 +251,86 @@ public class AdminController {
     @SuppressWarnings("unchecked")
     public String allEndpoints(Model model, HttpServletRequest request) {
         try {
-            // Build absolute URL for actuator endpoint
-            String actuatorUrl = buildAbsoluteActuatorUrl(request, "");
+            Map<String, Map<String, Object>> endpoints = new LinkedHashMap<>();
             
-            // Get all available actuator endpoints
-            RestTemplate restTemplate = new RestTemplate();
-            @SuppressWarnings("rawtypes")
-            ResponseEntity<Map> response = restTemplate.getForEntity(actuatorUrl, Map.class);
-            @SuppressWarnings("unchecked")
-            Map<String, Object> actuatorData = (Map<String, Object>) response.getBody();
-            
-            if (actuatorData != null && actuatorData.containsKey("_links")) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> links = (Map<String, Object>) actuatorData.get("_links");
+            if (webEndpointsSupplier != null) {
+                // Use injected WebEndpointsSupplier directly (recommended approach)
+                Collection<org.springframework.boot.actuate.endpoint.web.ExposableWebEndpoint> webEndpoints = 
+                    webEndpointsSupplier.getEndpoints();
                 
-                // Process endpoints and add metadata
-                Map<String, Map<String, Object>> endpoints = new LinkedHashMap<>();
-                
-                for (Map.Entry<String, Object> entry : links.entrySet()) {
-                    String endpointName = entry.getKey();
-                    if (!"self".equals(endpointName)) {
-                        Map<String, Object> endpointInfo = new HashMap<>();
-                        endpointInfo.put("name", endpointName);
-                        endpointInfo.put("displayName", formatEndpointName(endpointName));
-                        endpointInfo.put("description", getEndpointDescription(endpointName));
-                        endpointInfo.put("category", getEndpointCategory(endpointName));
-                        endpointInfo.put("icon", getEndpointIcon(endpointName));
-                        endpointInfo.put("url", getEndpointUrl(endpointName));
-                        endpointInfo.put("available", true);
-                        
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> linkData = (Map<String, Object>) entry.getValue();
-                        if (linkData.containsKey("href")) {
-                            endpointInfo.put("href", linkData.get("href"));
-                        }
-                        
-                        endpoints.put(endpointName, endpointInfo);
+                for (org.springframework.boot.actuate.endpoint.web.ExposableWebEndpoint endpoint : webEndpoints) {
+                    String endpointId = endpoint.getEndpointId().toLowerCaseString();
+                    
+                    Map<String, Object> endpointInfo = new HashMap<>();
+                    endpointInfo.put("name", endpointId);
+                    endpointInfo.put("displayName", formatEndpointName(endpointId));
+                    endpointInfo.put("description", getEndpointDescription(endpointId));
+                    endpointInfo.put("category", getEndpointCategory(endpointId));
+                    endpointInfo.put("icon", getEndpointIcon(endpointId));
+                    endpointInfo.put("url", getEndpointUrl(endpointId));
+                    endpointInfo.put("available", true);
+                    
+                    // Add root path for the endpoint
+                    String rootPath = endpoint.getRootPath();
+                    if (rootPath != null && !rootPath.isEmpty()) {
+                        endpointInfo.put("href", rootPath);
                     }
+                    
+                    endpoints.put(endpointId, endpointInfo);
                 }
-                
-                model.addAttribute("endpoints", endpoints);
-                model.addAttribute("totalEndpoints", endpoints.size());
-                
-                // Group endpoints by category
-                Map<String, List<Map<String, Object>>> endpointsByCategory = endpoints.values().stream()
-                    .collect(Collectors.groupingBy(
-                        endpoint -> (String) endpoint.get("category"),
-                        LinkedHashMap::new,
-                        Collectors.toList()
-                    ));
-                
-                model.addAttribute("endpointsByCategory", endpointsByCategory);
-                
             } else {
-                model.addAttribute("error", "No actuator endpoints found");
+                // Fallback to HTTP call if WebEndpointsSupplier is not available
+                String actuatorUrl = buildAbsoluteActuatorUrl(request, "");
+                
+                RestTemplate restTemplate = createAuthenticatedRestTemplate(request);
+                @SuppressWarnings("rawtypes")
+                ResponseEntity<Map> response = restTemplate.getForEntity(actuatorUrl, Map.class);
+                @SuppressWarnings("unchecked")
+                Map<String, Object> actuatorData = (Map<String, Object>) response.getBody();
+                
+                if (actuatorData != null && actuatorData.containsKey("_links")) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> links = (Map<String, Object>) actuatorData.get("_links");
+                    
+                    for (Map.Entry<String, Object> entry : links.entrySet()) {
+                        String endpointName = entry.getKey();
+                        if (!"self".equals(endpointName)) {
+                            Map<String, Object> endpointInfo = new HashMap<>();
+                            endpointInfo.put("name", endpointName);
+                            endpointInfo.put("displayName", formatEndpointName(endpointName));
+                            endpointInfo.put("description", getEndpointDescription(endpointName));
+                            endpointInfo.put("category", getEndpointCategory(endpointName));
+                            endpointInfo.put("icon", getEndpointIcon(endpointName));
+                            endpointInfo.put("url", getEndpointUrl(endpointName));
+                            endpointInfo.put("available", true);
+                            
+                            @SuppressWarnings("unchecked")
+                            Map<String, Object> linkData = (Map<String, Object>) entry.getValue();
+                            if (linkData.containsKey("href")) {
+                                endpointInfo.put("href", linkData.get("href"));
+                            }
+                            
+                            endpoints.put(endpointName, endpointInfo);
+                        }
+                    }
+                } else {
+                    model.addAttribute("error", "No actuator endpoints found");
+                    return "endpoints-overview";
+                }
             }
+            
+            model.addAttribute("endpoints", endpoints);
+            model.addAttribute("totalEndpoints", endpoints.size());
+            
+            // Group endpoints by category
+            Map<String, List<Map<String, Object>>> endpointsByCategory = endpoints.values().stream()
+                .collect(Collectors.groupingBy(
+                    endpoint -> (String) endpoint.get("category"),
+                    LinkedHashMap::new,
+                    Collectors.toList()
+                ));
+            
+            model.addAttribute("endpointsByCategory", endpointsByCategory);
             
         } catch (Exception e) {
             model.addAttribute("error", "Failed to fetch actuator endpoints: " + e.getMessage());
@@ -1285,16 +1316,35 @@ public class AdminController {
     @SuppressWarnings("unchecked")
     public String threadDumpDetail(Model model, HttpServletRequest request) {
         try {
-            // Use RestTemplate to fetch thread dump data from actuator endpoint
-            RestTemplate restTemplate = new RestTemplate();
-            String threadDumpUrl = buildAbsoluteActuatorUrl(request, "/threaddump");
+            List<Map<String, Object>> threads;
             
-            // Get thread dump data as Map
-            Map<String, Object> threadDumpResponse = restTemplate.getForObject(threadDumpUrl, Map.class);
-            
-            // Extract threads array
-            List<Map<String, Object>> threads = threadDumpResponse != null ? 
-                (List<Map<String, Object>>) threadDumpResponse.get("threads") : new ArrayList<>();
+            if (threadDumpEndpoint != null) {
+                // Use injected ThreadDumpEndpoint directly (recommended approach)
+                Object threadDumpResponse = threadDumpEndpoint.threadDump();
+                
+                if (threadDumpResponse instanceof org.springframework.boot.actuate.management.ThreadDumpEndpoint.ThreadDumpDescriptor) {
+                    org.springframework.boot.actuate.management.ThreadDumpEndpoint.ThreadDumpDescriptor descriptor = 
+                        (org.springframework.boot.actuate.management.ThreadDumpEndpoint.ThreadDumpDescriptor) threadDumpResponse;
+                    
+                    // Convert to Map using Jackson for easier template processing
+                    ObjectMapper mapper = new ObjectMapper();
+                    Map<String, Object> threadDumpMap = mapper.convertValue(descriptor, new TypeReference<Map<String, Object>>() {});
+                    threads = (List<Map<String, Object>>) threadDumpMap.get("threads");
+                } else {
+                    // Fallback: convert response to Map directly
+                    ObjectMapper mapper = new ObjectMapper();
+                    String jsonString = mapper.writeValueAsString(threadDumpResponse);
+                    Map<String, Object> threadDumpMap = mapper.readValue(jsonString, new TypeReference<Map<String, Object>>() {});
+                    threads = (List<Map<String, Object>>) threadDumpMap.get("threads");
+                }
+            } else {
+                // Fallback to HTTP call if ThreadDumpEndpoint is not available
+                RestTemplate restTemplate = createAuthenticatedRestTemplate(request);
+                String threadDumpUrl = buildAbsoluteActuatorUrl(request, "/threaddump");
+                Map<String, Object> threadDumpResponse = restTemplate.getForObject(threadDumpUrl, Map.class);
+                threads = threadDumpResponse != null ? 
+                    (List<Map<String, Object>>) threadDumpResponse.get("threads") : new ArrayList<>();
+            }
             
             if (threads == null) {
                 threads = new ArrayList<>();
@@ -1379,15 +1429,134 @@ public class AdminController {
     
     /**
      * Helper method to build absolute URL for actuator endpoints
+     * Handles production environments with load balancers and proxies
      */
     private String buildAbsoluteActuatorUrl(HttpServletRequest request, String endpoint) {
-        String scheme = request.getScheme();
-        String serverName = request.getServerName();
-        int serverPort = request.getServerPort();
+        // Try to get the original scheme and host from proxy headers first
+        String scheme = getOriginalScheme(request);
+        String serverName = getOriginalHost(request);
+        int serverPort = getOriginalPort(request, scheme);
         String contextPath = request.getContextPath();
         
-        String baseUrl = scheme + "://" + serverName + ":" + serverPort + contextPath;
+        // Build the base URL
+        String baseUrl;
+        if ((scheme.equals("http") && serverPort == 80) || (scheme.equals("https") && serverPort == 443)) {
+            // Don't include standard ports in the URL
+            baseUrl = scheme + "://" + serverName + contextPath;
+        } else {
+            baseUrl = scheme + "://" + serverName + ":" + serverPort + contextPath;
+        }
+        
         return baseUrl + "/actuator" + endpoint;
+    }
+    
+    /**
+     * Get the original scheme, handling X-Forwarded-Proto and other proxy headers
+     */
+    private String getOriginalScheme(HttpServletRequest request) {
+        // Check for X-Forwarded-Proto header (common in load balancers)
+        String forwardedProto = request.getHeader("X-Forwarded-Proto");
+        if (forwardedProto != null && !forwardedProto.isEmpty()) {
+            return forwardedProto.toLowerCase();
+        }
+        
+        // Check for X-Forwarded-SSL header
+        String forwardedSsl = request.getHeader("X-Forwarded-SSL");
+        if ("on".equalsIgnoreCase(forwardedSsl)) {
+            return "https";
+        }
+        
+        // Fall back to request scheme
+        return request.getScheme();
+    }
+    
+    /**
+     * Get the original host, handling X-Forwarded-Host and other proxy headers
+     */
+    private String getOriginalHost(HttpServletRequest request) {
+        // Check for X-Forwarded-Host header (common in load balancers)
+        String forwardedHost = request.getHeader("X-Forwarded-Host");
+        if (forwardedHost != null && !forwardedHost.isEmpty()) {
+            // Handle comma-separated list of hosts (take the first one)
+            return forwardedHost.split(",")[0].trim();
+        }
+        
+        // Check for Host header
+        String hostHeader = request.getHeader("Host");
+        if (hostHeader != null && !hostHeader.isEmpty()) {
+            // Extract hostname from Host header (remove port if present)
+            return hostHeader.split(":")[0].trim();
+        }
+        
+        // Fall back to request server name
+        return request.getServerName();
+    }
+    
+    /**
+     * Get the original port, handling X-Forwarded-Port and other proxy headers
+     */
+    private int getOriginalPort(HttpServletRequest request, String scheme) {
+        // Check for X-Forwarded-Port header
+        String forwardedPort = request.getHeader("X-Forwarded-Port");
+        if (forwardedPort != null && !forwardedPort.isEmpty()) {
+            try {
+                return Integer.parseInt(forwardedPort.trim());
+            } catch (NumberFormatException e) {
+                // Invalid port, fall through to defaults
+            }
+        }
+        
+        // Check for Host header with port
+        String hostHeader = request.getHeader("Host");
+        if (hostHeader != null && hostHeader.contains(":")) {
+            String[] hostParts = hostHeader.split(":");
+            if (hostParts.length == 2) {
+                try {
+                    return Integer.parseInt(hostParts[1].trim());
+                } catch (NumberFormatException e) {
+                    // Invalid port, fall through to defaults
+                }
+            }
+        }
+        
+        // Use standard ports for schemes
+        if ("https".equals(scheme)) {
+            return 443;
+        } else if ("http".equals(scheme)) {
+            return 80;
+        }
+        
+        // Fall back to request server port
+        return request.getServerPort();
+    }
+    
+    /**
+     * Create a RestTemplate with proper authentication context for internal actuator calls
+     */
+    private RestTemplate createAuthenticatedRestTemplate(HttpServletRequest request) {
+        RestTemplate restTemplate = new RestTemplate();
+        
+        // Add session cookie for authentication
+        String sessionId = null;
+        if (request.getCookies() != null) {
+            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+                if ("JSESSIONID".equals(cookie.getName())) {
+                    sessionId = cookie.getValue();
+                    break;
+                }
+            }
+        }
+        
+        if (sessionId != null) {
+            // Add interceptor to include session cookie in requests
+            final String finalSessionId = sessionId;
+            restTemplate.getInterceptors().add((httpRequest, body, execution) -> {
+                httpRequest.getHeaders().add("Cookie", "JSESSIONID=" + finalSessionId);
+                return execution.execute(httpRequest, body);
+            });
+        }
+        
+        return restTemplate;
     }
     
     // Role and Permission Management Methods
