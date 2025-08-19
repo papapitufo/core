@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Example App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: #28a745;
+            color: white;
+            padding: 20px;
+            margin: -30px -30px 30px -30px;
+            border-radius: 8px 8px 0 0;
+        }
+        .user-info {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .btn {
+            background: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            background: #c82333;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        .logout-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 App Dashboard</h1>
+            <p>Application Dashboard - Logout Testing</p>
+        </div>
+        
+        <div sec:authorize="isAuthenticated()">
+            <div class="user-info">
+                <h3>User Information</h3>
+                <p><strong>Username:</strong> <span th:text="${username}">user</span></p>
+                <p><strong>Authorities:</strong> <span th:text="${authorities}">ROLE_USER</span></p>
+                <p><strong>Authentication Status:</strong> ✅ Authenticated</p>
+            </div>
+            
+            <div>
+                <h3>Navigation</h3>
+                <a href="/" class="btn btn-secondary">← Back to Home</a>
+                <a href="/dashboard" class="btn btn-secondary">Core Dashboard</a>
+                <a href="/admin" class="btn btn-secondary" sec:authorize="hasRole('ADMIN')">Admin Panel</a>
+            </div>
+            
+            <div class="logout-section">
+                <h3>🚪 Logout from Dashboard</h3>
+                <p>Test logout functionality from the dashboard</p>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn">Logout (POST)</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Show this if not authenticated -->
+        <div sec:authorize="!isAuthenticated()">
+            <div class="user-info">
+                <h3>Not Authenticated</h3>
+                <p>You are not currently logged in.</p>
+                <p><strong>Authentication Status:</strong> ❌ NOT authenticated</p>
+                <a href="/login" class="btn btn-secondary">Go to Login</a>
+            </div>
+        </div>
+
+        <!-- Always show this debugging section -->
+        <div class="debug-info" style="background-color: #f0f0f0; padding: 15px; margin: 20px 0; border: 1px solid #ccc; border-radius: 5px;">
+            <h3>🔍 Debug Information</h3>
+            <p><strong>Username from controller:</strong> <span th:text="${username ?: 'NULL'}">Not set</span></p>
+            <p><strong>Authorities from controller:</strong> <span th:text="${authorities ?: 'NULL'}">Not set</span></p>
+            <p><strong>Current Principal:</strong> <span sec:authentication="name">Anonymous</span></p>
+            <p><strong>Current Authorities:</strong> <span sec:authentication="authorities">None</span></p>
+            <p><strong>Authentication object exists:</strong> <span sec:authorize="isAuthenticated()">YES</span><span sec:authorize="!isAuthenticated()">NO</span></p>
+        </div>
+    </div>
+</body>
+</html>

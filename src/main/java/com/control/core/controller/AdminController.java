@@ -82,12 +82,16 @@ public class AdminController {
     public String userManagement(@RequestParam(value = "search", required = false) String search,
                                 @RequestParam(value = "role", required = false) String roleFilter,
                                 @RequestParam(value = "status", required = false) String statusFilter,
-                                Model model) {
+                                Model model,
+                                HttpServletRequest request) {
         
         // Add empty CreateUserRequest if not already present (for form binding)
         if (!model.containsAttribute("createUserRequest")) {
             model.addAttribute("createUserRequest", new CreateUserRequest());
         }
+        // Add CSRF token to the model for Thymeleaf
+        org.springframework.security.web.csrf.CsrfToken csrfToken = (org.springframework.security.web.csrf.CsrfToken) request.getAttribute("_csrf");
+        model.addAttribute("_csrf", csrfToken);
         
         List<User> users = userService.getAllUsers();
         
