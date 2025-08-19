@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Example App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: #28a745;
+            color: white;
+            padding: 20px;
+            margin: -30px -30px 30px -30px;
+            border-radius: 8px 8px 0 0;
+        }
+        .user-info {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .btn {
+            background: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            background: #c82333;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        .logout-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Dashboard</h1>
+            <p>User Dashboard - Logout Testing</p>
+        </div>
+        
+        <div sec:authorize="isAuthenticated()">
+            <div class="user-info">
+                <h3>User Information</h3>
+                <p><strong>Username:</strong> <span th:text="${username}">user</span></p>
+                <p><strong>Authorities:</strong> <span th:text="${authorities}">ROLE_USER</span></p>
+                <p><strong>Authentication Status:</strong> ✅ Authenticated</p>
+            </div>
+            
+            <div>
+                <h3>Navigation</h3>
+                <a href="/" class="btn btn-secondary">← Back to Home</a>
+                <a href="/admin" class="btn btn-secondary" sec:authorize="hasRole('ADMIN')">Admin Panel</a>
+            </div>
+            
+            <div class="logout-section">
+                <h3>🚪 Logout from Dashboard</h3>
+                <p>Test logout functionality from the dashboard page:</p>
+                
+                <!-- Standard logout form -->
+                <form th:action="@{/logout}" method="post" style="display: inline-block;">
+                    <button type="submit" class="btn">Logout Now</button>
+                </form>
+                
+                <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                    After logout, you should be redirected to: <code>/login?logout=true</code>
+                </p>
+            </div>
+        </div>
+        
+        <div sec:authorize="!isAuthenticated()">
+            <div class="user-info">
+                <h3>🔒 Access Denied</h3>
+                <p>You need to be logged in to access the dashboard.</p>
+                <a href="/login" class="btn">Login</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
