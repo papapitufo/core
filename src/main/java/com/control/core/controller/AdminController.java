@@ -1566,9 +1566,13 @@ public class AdminController {
     // Role and Permission Management Methods
     
     @GetMapping("/roles")
-    public String roleManagement(Model model) {
+    public String roleManagement(Model model, HttpServletRequest request) {
         List<Role> roles = roleService.findAllWithPermissions();
         List<Permission> allPermissions = permissionService.findAll();
+        
+        // Add CSRF token to the model for Thymeleaf
+        org.springframework.security.web.csrf.CsrfToken csrfToken = (org.springframework.security.web.csrf.CsrfToken) request.getAttribute("_csrf");
+        model.addAttribute("_csrf", csrfToken);
         
         // Calculate statistics
         long totalRoles = roles.size();
