@@ -282,6 +282,19 @@
                 <a href="/admin/actuator" class="btn btn-primary">View System Status</a>
             </div>
             
+            <div class="card" sec:authorize="hasRole('ADMIN')">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <span class="material-icons">article</span>
+                    </div>
+                    <h3 class="card-title">Application Logs</h3>
+                </div>
+                <div class="card-content">
+                    View real-time application logs, filter by log levels, and monitor system events live.
+                </div>
+                <a href="/admin/actuator/logs-detail" class="btn btn-primary">View Logs</a>
+            </div>
+            
             <div class="card">
                 <div class="card-header">
                     <div class="card-icon">

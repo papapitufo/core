@@ -54,4 +54,23 @@ public class WebSecurityConfig {
             )
             .build();
     }
+
+    /**
+     * Configure CSRF exemption for SSE endpoints
+     */
+    @Bean
+    @Order(45)
+    public SecurityFilterChain sseSecurityFilterChain(HttpSecurity http) throws Exception {
+        System.out.println("Consumer App: Configuring SSE security filter chain");
+        
+        return http
+            .securityMatcher("/admin/actuator/logs/stream")
+            .authorizeHttpRequests(authz -> authz
+                .anyRequest().authenticated()
+            )
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers("/admin/actuator/logs/stream")
+            )
+            .build();
+    }
 }

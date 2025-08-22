@@ -7,6 +7,7 @@ import com.control.core.model.Permission;
 import com.control.core.service.UserService;
 import com.control.core.service.RoleService;
 import com.control.core.service.PermissionService;
+import com.control.core.logging.InMemoryLogAppender;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.boot.actuate.health.HealthComponent;
@@ -22,6 +23,8 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 
 import jakarta.validation.Valid;
@@ -77,6 +80,9 @@ public class AdminController {
     
     @Autowired(required = false)
     private org.springframework.boot.actuate.endpoint.web.WebEndpointsSupplier webEndpointsSupplier;
+    
+    @Autowired
+    private com.control.core.logging.InMemoryLogAppender logAppender;
     
     @GetMapping("/users")
     public String userManagement(@RequestParam(value = "search", required = false) String search,
@@ -282,6 +288,17 @@ public class AdminController {
                     
                     endpoints.put(endpointId, endpointInfo);
                 }
+                
+                // Add custom logs endpoint
+                Map<String, Object> logsEndpoint = new HashMap<>();
+                logsEndpoint.put("name", "logs");
+                logsEndpoint.put("displayName", "Logs");
+                logsEndpoint.put("description", "Application logs and real-time monitoring");
+                logsEndpoint.put("category", "Diagnostics");
+                logsEndpoint.put("icon", "article");
+                logsEndpoint.put("url", "/admin/actuator/logs-detail");
+                logsEndpoint.put("available", true);
+                endpoints.put("logs", logsEndpoint);
             } else {
                 // Fallback to HTTP call if WebEndpointsSupplier is not available
                 String actuatorUrl = buildAbsoluteActuatorUrl(request, "");
@@ -317,6 +334,17 @@ public class AdminController {
                             endpoints.put(endpointName, endpointInfo);
                         }
                     }
+                    
+                    // Add custom logs endpoint
+                    Map<String, Object> logsEndpoint = new HashMap<>();
+                    logsEndpoint.put("name", "logs");
+                    logsEndpoint.put("displayName", "Logs");
+                    logsEndpoint.put("description", "Application logs and real-time monitoring");
+                    logsEndpoint.put("category", "Diagnostics");
+                    logsEndpoint.put("icon", "article");
+                    logsEndpoint.put("url", "/admin/actuator/logs-detail");
+                    logsEndpoint.put("available", true);
+                    endpoints.put("logs", logsEndpoint);
                 } else {
                     model.addAttribute("error", "No actuator endpoints found");
                     return "endpoints-overview";
@@ -361,6 +389,7 @@ public class AdminController {
             case "beans": return "Spring beans and their dependencies";
             case "threaddump": return "Thread dump and stack trace analysis";
             case "loggers": return "Logger configuration and levels";
+            case "logs": return "Application logs and real-time monitoring";
             case "scheduledtasks": return "Scheduled tasks and cron jobs";
             case "sessions": return "Active user sessions (if available)";
             case "flyway": return "Flyway database migration information";
@@ -377,7 +406,7 @@ public class AdminController {
             case "health": case "info": case "metrics": return "Monitoring";
             case "env": case "environment": case "configprops": return "Configuration";
             case "mappings": case "beans": return "Application Structure";
-            case "threaddump": case "loggers": return "Diagnostics";
+            case "threaddump": case "loggers": case "logs": return "Diagnostics";
             case "scheduledtasks": case "sessions": return "Runtime";
             case "flyway": case "liquibase": return "Database";
             case "caches": return "Performance";
@@ -398,6 +427,7 @@ public class AdminController {
             case "beans": return "account_tree";
             case "threaddump": return "psychology";
             case "loggers": return "bug_report";
+            case "logs": return "article";
             case "scheduledtasks": return "schedule";
             case "sessions": return "people";
             case "flyway": case "liquibase": return "storage";
@@ -418,6 +448,7 @@ public class AdminController {
             case "health": return "/admin/actuator/health-detail";
             case "info": return "/admin/actuator/info-detail";
             case "metrics": return "/admin/actuator/metrics-detail";
+            case "logs": return "/admin/actuator/logs-detail";
             default: return "#";
         }
     }
@@ -1854,5 +1885,47 @@ public class AdminController {
         }
         
         return "redirect:/admin/permissions";
+    }
+    
+    @GetMapping("/actuator/logs-detail")
+    @PreAuthorize("hasRole('ADMIN')")
+    public String logsDetail(Model model) {
+        try {
+            // Use singleton instance if available, fallback to injected instance
+            InMemoryLogAppender appender = InMemoryLogAppender.getInstance() != null ? 
+                InMemoryLogAppender.getInstance() : logAppender;
+            
+            // Get log statistics
+            Map<String, Object> stats = appender.getStatistics();
+            model.addAttribute("logStats", stats);
+            model.addAttribute("section", "logs");
+            model.addAttribute("lastUpdated", LocalDateTime.now());
+            
+        } catch (Exception e) {
+            model.addAttribute("error", "Unable to fetch log information: " + e.getMessage());
+        }
+        
+        return "logs-detail";
+    }
+    
+    @GetMapping("/actuator/logs/api")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ResponseBody
+    public List<com.control.core.logging.InMemoryLogAppender.LogEvent> getRecentLogs(
+            @RequestParam(defaultValue = "200") int limit,
+            @RequestParam(defaultValue = "ALL") String level) {
+        // Use singleton instance if available, fallback to injected instance
+        InMemoryLogAppender appender = InMemoryLogAppender.getInstance() != null ? 
+            InMemoryLogAppender.getInstance() : logAppender;
+        return appender.getRecent(limit, level);
+    }
+    
+    @GetMapping(value = "/actuator/logs/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public SseEmitter streamLogs() {
+        // Use singleton instance if available, fallback to injected instance
+        InMemoryLogAppender appender = InMemoryLogAppender.getInstance() != null ? 
+            InMemoryLogAppender.getInstance() : logAppender;
+        return appender.createEmitter(30 * 60 * 1000L); // 30 minutes timeout
     }
 }
