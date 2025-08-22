@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Logs - Admin Dashboard</title>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    
+    <!-- Material UI CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <h1 class="header-title">Core Application</h1>
+        <div class="header-actions">
+            <div class="user-info">
+                <span class="material-icons">person</span>
+                <span sec:authentication="name">User</span>
+            </div>
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <button type="submit" class="btn btn-outline">
+                    <span class="material-icons" style="font-size: 16px; margin-right: 4px;">logout</span>
+                    Logout
+                </button>
+            </form>
+        </div>
+    </header>
+    
+    <div class="container">
+        <!-- Navigation Breadcrumb -->
+        <div class="breadcrumb-nav">
+            <a href="/dashboard" class="breadcrumb-link">
+                <span class="material-icons">dashboard</span>
+                Dashboard
+            </a>
+            <span class="material-icons breadcrumb-separator">chevron_right</span>
+            <a href="/admin/actuator" class="breadcrumb-link">
+                <span class="material-icons">analytics</span>
+                System Monitoring
+            </a>
+            <span class="material-icons breadcrumb-separator">chevron_right</span>
+            <span class="breadcrumb-current">
+                <span class="material-icons">article</span>
+                Application Logs
+            </span>
+        </div>
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2 class="page-title">
+                <span class="material-icons">article</span>
+                Application Logs
+            </h2>
+            <div class="connection-status" id="connectionStatus">
+                <span class="status-badge status-disconnected" id="statusBadge">
+                    <span class="status-indicator" id="statusIndicator"></span>
+                    <span id="statusText">Disconnected</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Error Display -->
+        <div th:if="${error}" class="error-alert">
+            <span class="material-icons">error</span>
+            <span th:text="${error}"></span>
+        </div>
+
+        <!-- Log Statistics Cards -->
+        <div class="stats-grid" th:if="${logStats}">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <span class="material-icons">event_note</span>
+                </div>
+                <div class="stat-number" th:text="${logStats.totalEvents}">0</div>
+                <div class="stat-label">Total Events</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <span class="material-icons">wifi</span>
+                </div>
+                <div class="stat-number" th:text="${logStats.activeStreams}">0</div>
+                <div class="stat-label">Active Streams</div>
+            </div>
+            <div class="stat-card" th:if="${logStats.levelCounts['ERROR'] > 0}">
+                <div class="stat-icon error">
+                    <span class="material-icons">error</span>
+                </div>
+                <div class="stat-number" th:text="${logStats.levelCounts['ERROR']}">0</div>
+                <div class="stat-label">Errors</div>
+            </div>
+            <div class="stat-card" th:if="${logStats.levelCounts['WARN'] > 0}">
+                <div class="stat-icon warning">
+                    <span class="material-icons">warning</span>
+                </div>
+                <div class="stat-number" th:text="${logStats.levelCounts['WARN']}">0</div>
+                <div class="stat-label">Warnings</div>
+            </div>
+        </div>
+
+        <!-- Log Controls -->
+        <div class="controls-card">
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label for="logLevel" class="control-label">Filter Level:</label>
+                    <select id="logLevel" class="control-select">
+                        <option value="ALL">All Levels</option>
+                        <option value="ERROR">Error</option>
+                        <option value="WARN">Warning</option>
+                        <option value="INFO">Info</option>
+                        <option value="DEBUG">Debug</option>
+                        <option value="TRACE">Trace</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="logLimit" class="control-label">Limit:</label>
+                    <select id="logLimit" class="control-select">
+                        <option value="100">100</option>
+                        <option value="200" selected>200</option>
+                        <option value="500">500</option>
+                        <option value="1000">1000</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <div class="control-buttons">
+                        <button class="btn btn-primary" onclick="refreshLogs()">
+                            <span class="material-icons">refresh</span>
+                            Refresh
+                        </button>
+                        <button class="btn btn-primary" id="toggleStream" onclick="toggleLiveStream()">
+                            <span class="material-icons">play_arrow</span>
+                            Start Live
+                        </button>
+                        <button class="btn btn-outline" onclick="clearLogs()">
+                            <span class="material-icons">clear</span>
+                            Clear
+                        </button>
+                    </div>
+                    <div class="auto-scroll-control">
+                        <input type="checkbox" id="autoScroll" checked>
+                        <label for="autoScroll">Auto-scroll</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Container -->
+        <div class="log-card">
+            <div class="log-header">
+                <h3>
+                    <span class="material-icons">terminal</span>
+                    Log Output
+                </h3>
+                <small>
+                    <span class="material-icons">schedule</span>
+                    Last updated: <span th:text="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd HH:mm:ss')}"></span>
+                </small>
+            </div>
+            <div class="log-container" id="logContainer">
+                <div class="log-entry">
+                    <span class="log-timestamp">Loading logs...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            color: #212121;
+            line-height: 1.5;
+        }
+        
+        .header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #1976d2;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        .breadcrumb-nav {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 16px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .breadcrumb-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #1976d2;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .breadcrumb-link:hover {
+            color: #1565c0;
+        }
+        
+        .breadcrumb-separator {
+            color: #666;
+            margin: 0 16px;
+        }
+        
+        .breadcrumb-current {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 24px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.8rem;
+            font-weight: 500;
+            color: #212121;
+        }
+        
+        .connection-status .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .status-connected {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .status-connected .status-indicator {
+            background-color: #4caf50;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-disconnected {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .status-disconnected .status-indicator {
+            background-color: #f44336;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .error-alert {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background-color: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #c62828;
+            border-radius: 4px;
+            margin-bottom: 24px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 4px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .stat-icon {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+        }
+        
+        .stat-icon.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .stat-icon.warning {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1976d2;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .controls-card {
+            background: white;
+            border-radius: 4px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 2fr;
+            gap: 24px;
+            align-items: end;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .control-label {
+            font-weight: 500;
+            color: #212121;
+            font-size: 14px;
+        }
+        
+        .control-select {
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+        }
+        
+        .control-select:focus {
+            outline: none;
+            border-color: #1976d2;
+            border-width: 2px;
+        }
+        
+        .control-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .auto-scroll-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .auto-scroll-control input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Roboto', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: #1976d2;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1565c0;
+            box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            color: #1976d2;
+            border: 1px solid #1976d2;
+        }
+        
+        .btn-outline:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .btn-danger {
+            background-color: #c62828;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #b71c1c;
+        }
+        
+        .log-card {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .log-header {
+            background: #212121;
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .log-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        .log-header small {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ccc;
+        }
+        
+        .log-container {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace;
+            font-size: 12px;
+            padding: 15px;
+            max-height: 60vh;
+            overflow-y: auto;
+            margin: 0;
+        }
+        
+        .log-entry {
+            margin-bottom: 2px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        
+        .log-timestamp {
+            color: #569cd6;
+            font-weight: normal;
+        }
+        
+        .log-level {
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-right: 8px;
+            min-width: 50px;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .log-level-ERROR {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .log-level-WARN {
+            background-color: #ff9800;
+            color: white;
+        }
+        
+        .log-level-INFO {
+            background-color: #2196f3;
+            color: white;
+        }
+        
+        .log-level-DEBUG {
+            background-color: #4caf50;
+            color: white;
+        }
+        
+        .log-level-TRACE {
+            background-color: #9e9e9e;
+            color: white;
+        }
+        
+        .log-logger {
+            color: #dcdcaa;
+        }
+        
+        .log-message {
+            color: #d4d4d4;
+        }
+        
+        .material-icons {
+            font-size: 24px;
+        }
+        
+        @media (max-width: 768px) {
+            .controls-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .control-buttons {
+                flex-wrap: wrap;
+            }
+            
+            .breadcrumb-nav {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+        }
+    </style>
+
+    <script th:inline="javascript">
+        let eventSource = null;
+        let isStreaming = false;
+        let autoScroll = true;
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshLogs();
+            
+            // Set up auto-scroll checkbox
+            document.getElementById('autoScroll').addEventListener('change', function() {
+                autoScroll = this.checked;
+            });
+            
+            // Set up filter change handlers
+            document.getElementById('logLevel').addEventListener('change', refreshLogs);
+            document.getElementById('logLimit').addEventListener('change', refreshLogs);
+        });
+        
+        function refreshLogs() {
+            const level = document.getElementById('logLevel').value;
+            const limit = document.getElementById('logLimit').value;
+            
+            fetch(`/admin/actuator/logs/api?level=${level}&limit=${limit}`)
+                .then(response => response.json())
+                .then(logs => {
+                    displayLogs(logs, true);
+                })
+                .catch(error => {
+                    console.error('Error fetching logs:', error);
+                    displayError('Failed to fetch logs: ' + error.message);
+                });
+        }
+        
+        function displayLogs(logs, replace = false) {
+            const container = document.getElementById('logContainer');
+            
+            if (replace) {
+                container.innerHTML = '';
+            }
+            
+            logs.forEach(log => {
+                const logEntry = createLogEntry(log);
+                container.appendChild(logEntry);
+            });
+            
+            if (autoScroll) {
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+        
+        function createLogEntry(log) {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            
+            entry.innerHTML = `
+                <span class="log-timestamp">${log.timestamp}</span>
+                <span class="log-level log-level-${log.level}">${log.level}</span>
+                <span class="log-logger">[${log.logger}]</span>
+                <span class="log-message">${escapeHtml(log.message)}</span>
+            `;
+            
+            return entry;
+        }
+        
+        function toggleLiveStream() {
+            console.log('🔄 Toggling live stream. Current state - isStreaming:', isStreaming);
+            if (isStreaming) {
+                stopLiveStream();
+            } else {
+                startLiveStream();
+            }
+        }
+        
+        function startLiveStream() {
+            if (eventSource) {
+                console.log('Closing existing EventSource');
+                eventSource.close();
+                eventSource = null;
+            }
+            
+            // SSE endpoint without CSRF token since it's exempted in security config
+            const streamUrl = '/admin/actuator/logs/stream';
+            
+            console.log('🔵 Attempting to connect to SSE:', streamUrl);
+            console.log('🔵 EventSource support:', typeof EventSource !== 'undefined');
+            
+            try {
+                eventSource = new EventSource(streamUrl);
+                
+                console.log('🔵 EventSource created, readyState:', eventSource.readyState);
+                console.log('🔵 EventSource URL:', eventSource.url);
+                
+                // Monitor state changes
+                let readyStateMonitor = setInterval(function() {
+                    if (eventSource) {
+                        console.log('🔵 EventSource readyState check:', eventSource.readyState, 
+                                  eventSource.readyState === EventSource.CONNECTING ? 'CONNECTING' :
+                                  eventSource.readyState === EventSource.OPEN ? 'OPEN' :
+                                  eventSource.readyState === EventSource.CLOSED ? 'CLOSED' : 'UNKNOWN');
+                        
+                        if (eventSource.readyState === EventSource.OPEN) {
+                            clearInterval(readyStateMonitor);
+                        } else if (eventSource.readyState === EventSource.CLOSED) {
+                            clearInterval(readyStateMonitor);
+                        }
+                    } else {
+                        clearInterval(readyStateMonitor);
+                    }
+                }, 500);
+                
+                eventSource.onopen = function(event) {
+                    console.log('🟢 SSE connection opened successfully!', event);
+                    console.log('🟢 Connection readyState:', eventSource.readyState);
+                    isStreaming = true;
+                    updateConnectionStatus(true);
+                    updateToggleButton();
+                };
+                
+                eventSource.onmessage = function(event) {
+                    console.log('📨 SSE message received:', event.data);
+                    
+                    // Handle different event types
+                    if (event.lastEventId === 'connected' || event.data.includes('"message":"SSE connection established"')) {
+                        console.log('🎉 SSE connection confirmed by server');
+                        return; // Don't display connection confirmation as a log entry
+                    }
+                    
+                    try {
+                        const log = JSON.parse(event.data);
+                        console.log('📨 Parsed log event:', log);
+                        displayLogs([log], false);
+                    } catch (error) {
+                        console.error('❌ Error parsing log event:', error, 'Raw data:', event.data);
+                    }
+                };
+                
+                // Handle specific event types (if server sends them)
+                eventSource.addEventListener('connected', function(event) {
+                    console.log('🎉 SSE connection confirmed via "connected" event:', event.data);
+                });
+                
+                eventSource.addEventListener('log', function(event) {
+                    console.log('📨 SSE log event received:', event.data);
+                    try {
+                        const log = JSON.parse(event.data);
+                        console.log('📨 Parsed log event:', log);
+                        displayLogs([log], false);
+                    } catch (error) {
+                        console.error('❌ Error parsing log event:', error, 'Raw data:', event.data);
+                    }
+                });
+                
+                eventSource.onerror = function(event) {
+                    console.error('❌ EventSource error occurred:', event);
+                    console.error('❌ EventSource readyState:', eventSource?.readyState);
+                    console.error('❌ EventSource URL:', eventSource?.url);
+                    
+                    // Check the readyState to understand the error better
+                    if (eventSource?.readyState === EventSource.CONNECTING) {
+                        console.log('🟡 SSE is reconnecting...');
+                    } else if (eventSource?.readyState === EventSource.CLOSED) {
+                        console.log('🔴 SSE connection closed permanently');
+                        stopLiveStream();
+                    } else {
+                        console.log('🔴 SSE connection failed with unknown state');
+                        stopLiveStream();
+                    }
+                };
+                
+                // Set a timeout to detect if connection doesn't establish
+                setTimeout(function() {
+                    if (eventSource && eventSource.readyState === EventSource.CONNECTING) {
+                        console.warn('⚠️ SSE connection taking longer than expected (still CONNECTING after 5s)');
+                    }
+                }, 5000);
+                
+            } catch (error) {
+                console.error('❌ Failed to create EventSource:', error);
+                stopLiveStream();
+            }
+        }
+        
+        function stopLiveStream() {
+            console.log('🔴 Stopping live stream');
+            if (eventSource) {
+                console.log('🔴 Closing EventSource, current readyState:', eventSource.readyState);
+                eventSource.close();
+                eventSource = null;
+            }
+            isStreaming = false;
+            updateConnectionStatus(false);
+            updateToggleButton();
+            console.log('🔴 Live stream stopped');
+        }
+        
+        function updateConnectionStatus(connected) {
+            const statusBadge = document.getElementById('statusBadge');
+            const statusIndicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            
+            if (connected) {
+                statusBadge.className = 'status-badge status-connected';
+                statusText.textContent = 'Live Stream Active';
+            } else {
+                statusBadge.className = 'status-badge status-disconnected';
+                statusText.textContent = 'Disconnected';
+            }
+        }
+        
+        function updateToggleButton() {
+            const button = document.getElementById('toggleStream');
+            if (isStreaming) {
+                button.innerHTML = '<span class="material-icons">stop</span> Stop Live';
+                button.className = 'btn btn-danger';
+            } else {
+                button.innerHTML = '<span class="material-icons">play_arrow</span> Start Live';
+                button.className = 'btn btn-primary';
+            }
+        }
+        
+        function clearLogs() {
+            document.getElementById('logContainer').innerHTML = '';
+        }
+        
+        function displayError(message) {
+            const container = document.getElementById('logContainer');
+            container.innerHTML = `
+                <div class="log-entry" style="color: #f44336;">
+                    <span class="log-timestamp">${new Date().toISOString()}</span>
+                    <span class="log-level log-level-ERROR">ERROR</span>
+                    <span class="log-message">${escapeHtml(message)}</span>
+                </div>
+            `;
+        }
+        
+        function escapeHtml(unsafe) {
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', function() {
+            if (eventSource) {
+                eventSource.close();
+            }
+        });
+    </script>
+</body>
+</html>
