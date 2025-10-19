@@ -2,7 +2,7 @@
 
 A comprehensive Spring Boot Starter for authentication and user management with a beautiful Material UI frontend.
 
-[![Version](https://img.shields.io/badge/version-1.0.25-blue.svg)](https://github.com/papapitufo/core/packages)
+[![Version](https://img.shields.io/badge/version-1.0.31-blue.svg)](https://github.com/papapitufo/core/packages)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://openjdk.java.net/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -72,7 +72,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.control:core-auth-starter:1.0.25")
+    implementation("com.control:core-auth-starter:1.0.31")
     runtimeOnly("org.postgresql:postgresql") // or your preferred database
     
     // Optional: Required for email functionality (password reset)
@@ -94,7 +94,7 @@ dependencies {
     <dependency>
         <groupId>com.control</groupId>
         <artifactId>core-auth-starter</artifactId>
-        <version>1.0.25</version>
+        <version>1.0.31</version>
     </dependency>
     <!-- Optional: Required for email functionality (password reset) -->
     <dependency>
