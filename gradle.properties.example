@@ -1,0 +1,9 @@
+# GitHub Packages Publishing Configuration
+# Copy this file to gradle.properties and fill in your credentials
+
+# Your GitHub username
+gpr.user=your_github_username
+
+# Your GitHub Personal Access Token with 'write:packages' permission
+# Generate at: https://github.com/settings/tokens
+gpr.key=your_github_token
