@@ -1,6 +1,5 @@
 package com.control.core.service;
 
-import com.control.core.model.Permission;
 import com.control.core.model.Role;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;

@@ -2,7 +2,6 @@ package com.control.core.service;
 
 import com.control.core.model.Permission;
 import com.control.core.repository.PermissionRepository;
-import com.control.core.repository.RoleRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,12 +16,9 @@ import java.util.stream.Collectors;
 public class PermissionService {
     
     private final PermissionRepository permissionRepository;
-    private final RoleRepository roleRepository;
     
-    public PermissionService(PermissionRepository permissionRepository,
-                           RoleRepository roleRepository) {
+    public PermissionService(PermissionRepository permissionRepository) {
         this.permissionRepository = permissionRepository;
-        this.roleRepository = roleRepository;
     }
     
     public List<Permission> findAll() {

@@ -85,7 +85,8 @@ public class WebController {
     @GetMapping("/test-email")
     public String testEmail() {
         try {
-            passwordResetService.sendPasswordResetEmail("iborrelleom@gmail.com");
+            // TODO: Replace with your test email address
+            passwordResetService.sendPasswordResetEmail("test@example.com");
             return "redirect:/dashboard?emailTest=success";
         } catch (Exception e) {
             System.err.println("Email test failed: " + e.getMessage());

@@ -306,11 +306,9 @@ public class AdminController {
                 RestTemplate restTemplate = createAuthenticatedRestTemplate(request);
                 @SuppressWarnings("rawtypes")
                 ResponseEntity<Map> response = restTemplate.getForEntity(actuatorUrl, Map.class);
-                @SuppressWarnings("unchecked")
                 Map<String, Object> actuatorData = (Map<String, Object>) response.getBody();
                 
                 if (actuatorData != null && actuatorData.containsKey("_links")) {
-                    @SuppressWarnings("unchecked")
                     Map<String, Object> links = (Map<String, Object>) actuatorData.get("_links");
                     
                     for (Map.Entry<String, Object> entry : links.entrySet()) {
@@ -325,7 +323,6 @@ public class AdminController {
                             endpointInfo.put("url", getEndpointUrl(endpointName));
                             endpointInfo.put("available", true);
                             
-                            @SuppressWarnings("unchecked")
                             Map<String, Object> linkData = (Map<String, Object>) entry.getValue();
                             if (linkData.containsKey("href")) {
                                 endpointInfo.put("href", linkData.get("href"));
@@ -1291,6 +1288,7 @@ public class AdminController {
             Map<String, Object> beansData = mapper.convertValue(beansDescriptor, new TypeReference<Map<String, Object>>() {});
             
             // Extract contexts
+            @SuppressWarnings("unchecked")
             Map<String, Object> contexts = (Map<String, Object>) beansData.get("contexts");
             
             // Statistics
@@ -1301,7 +1299,9 @@ public class AdminController {
             
             for (Map.Entry<String, Object> contextEntry : contexts.entrySet()) {
                 String contextName = contextEntry.getKey();
+                @SuppressWarnings("unchecked")
                 Map<String, Object> contextData = (Map<String, Object>) contextEntry.getValue();
+                @SuppressWarnings("unchecked")
                 Map<String, Object> beans = (Map<String, Object>) contextData.get("beans");
                 
                 int contextBeanCount = beans.size();
@@ -1310,6 +1310,7 @@ public class AdminController {
                 
                 // Count beans by type
                 for (Map.Entry<String, Object> beanEntry : beans.entrySet()) {
+                    @SuppressWarnings("unchecked")
                     Map<String, Object> beanInfo = (Map<String, Object>) beanEntry.getValue();
                     String type = (String) beanInfo.get("type");
                     if (type != null) {

@@ -3,64 +3,60 @@
 A comprehensive Spring Boot Starter for authentication and user management with a beautiful Material UI frontend.
 
 [![Version](https://img.shields.io/badge/version-1.0.25-blue.svg)](https://github.com/papapitufo/core/packages)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.3-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.6-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://openjdk.java.net/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🚀 Features
+## ✨ Features
 
-🔐 **Complete Authentication System**
-- Login/Logout functionality with username or email
-- User registration with comprehensive validation
-- Password reset with secure email verification
-- Advanced Role-Based Access Control (RBAC) with fine-grained permissions
-- Session management and security
+### 🔐 Complete Authentication System
+- **Login/Logout**: Username or email authentication with "remember me"
+- **User Registration**: Comprehensive validation and duplicate prevention
+- **Password Reset**: Secure email-based token verification
+- **Session Management**: Configurable timeout and security policies
 
-🛡️ **Advanced RBAC System** ⭐ **NEW**
-- **Granular Permissions**: Define specific actions like `USER_CREATE`, `REPORT_VIEW`, `SYSTEM_ADMIN`
-- **Role Management**: Create custom roles with permission sets (ADMIN, MODERATOR, USER, etc.)
-- **Direct User Permissions**: Grant additional permissions to individual users
-- **Permission Categories**: Organize permissions by function (User Management, System Monitoring, etc.)
-- **Annotation-Based Security**: Use `@RequirePermission`, `@AdminOnly`, `@RequireOwnership` annotations
-- **Web-Based Admin Interface**: Manage roles, permissions, and user assignments through intuitive UI
+### 🛡️ Advanced RBAC (Role-Based Access Control)
+- **Granular Permissions**: Define specific actions (`USER_CREATE`, `REPORT_VIEW`, `SYSTEM_ADMIN`)
+- **Role Management**: Create custom roles with permission sets (ADMIN, MODERATOR, USER)
+- **Direct User Permissions**: Grant additional permissions beyond role assignments
+- **Permission Categories**: Organize by function (User Management, System Monitoring, etc.)
+- **Annotation-Based Security**: Use `@RequirePermission`, `@AdminOnly`, `@RequireOwnership`
+- **Web Admin Interface**: Manage roles, permissions, and assignments via intuitive UI
+- � **[Complete RBAC Guide](RBAC_GUIDE.md)**
 
-👥 **Advanced User Management**
-- Admin dashboard for complete user lifecycle management
-- **Permission Assignment**: Grant direct permissions to users beyond their roles
-- Create, activate, deactivate, and delete users
-- Real-time user search and filtering
+### 👥 User Management
+- Full user lifecycle management (create, activate, deactivate, delete)
+- Real-time search and filtering
 - User activity tracking and last login timestamps
-- **Role Assignment**: Assign multiple roles to users with inheritance
+- Role and permission assignment
 - Bulk operations support
 
-🎨 **Professional Material UI Frontend**
-- Responsive design that works on all devices
-- **New Admin Interfaces**: Role management, permission management, and category organization
-- Consistent 4px border-radius styling throughout
-- Modal dialogs with real-time validation feedback
+### 🎨 Material UI Frontend
+- Responsive design for all devices
+- Consistent 4px border-radius styling
+- Modal dialogs with real-time validation
 - CSRF protection built-in
 - Loading states and user feedback
 
-📧 **Flexible Email Services**
-- Support for Gmail, SendGrid, MailHog, and custom SMTP
-- Beautifully designed HTML email templates
-- Password reset email workflow
-- Configurable email providers with fallback options
+### 📧 Email Services
+- Multi-provider support (Gmail, SendGrid, MailHog, custom SMTP)
+- Beautiful HTML email templates
+- Password reset workflow
+- Configurable with fallback options
 
-⚙️ **Zero-Configuration Setup**
+### ⚙️ Zero-Configuration Setup
 - Spring Boot Auto-Configuration
-- Automatic database schema creation with RBAC tables
-- Default admin user creation with full permissions
-- **Default RBAC Setup**: Pre-configured permissions and roles for immediate use
+- Automatic database schema creation (including RBAC tables)
+- Default admin user with full permissions
+- Pre-configured permissions and roles
 - Sensible security defaults
 
 ## 📦 Installation
 
-> **⚠️ Important:** This starter requires **Spring Boot 3.0+** and **Java 17+**. If your application uses Spring Boot 2.x, please see the [Migration Guide](#migration-from-spring-boot-2x) below.
+> **⚠️ Requirements:** Spring Boot 3.0+ and Java 17+  
+> Using Spring Boot 2.x? See [Migration Guide](#migration-from-spring-boot-2x)
 
-### For GitHub Packages
-
-Add the repository and dependency to your `build.gradle.kts`:
+### Gradle (Kotlin DSL)
 
 ```kotlin
 repositories {
@@ -75,15 +71,13 @@ repositories {
     }
 }
 
-```kotlin
 dependencies {
     implementation("com.control:core-auth-starter:1.0.25")
     runtimeOnly("org.postgresql:postgresql") // or your preferred database
     
-    // Required for email functionality (password reset emails)
+    // Optional: Required for email functionality (password reset)
     implementation("org.springframework.boot:spring-boot-starter-mail")
 }
-```
 ```
 
 ### Maven
@@ -100,41 +94,9 @@ dependencies {
     <dependency>
         <groupId>com.control</groupId>
         <artifactId>core-auth-starter</artifactId>
-        <version>1.0.14</version>
-    </dependency>
-    <!-- Required for email functionality (password reset emails) -->
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-mail</artifactId>
-    </dependency>
-</dependencies>
-```
-
-## 🛠️ Quick Setup
-
-### 1. Add Required Dependencies
-
-**For Email Functionality (Password Reset):**
-If you want to use the password reset feature, you must add the mail starter dependency:
-
-```kotlin
-// Gradle
-dependencies {
-    implementation("com.control:core-auth-starter:1.0.25")
-    implementation("org.springframework.boot:spring-boot-starter-mail") // Required for email
-    runtimeOnly("org.postgresql:postgresql") // or your preferred database
-}
-```
-
-```xml
-<!-- Maven -->
-<dependencies>
-    <dependency>
-        <groupId>com.control</groupId>
-        <artifactId>core-auth-starter</artifactId>
         <version>1.0.25</version>
     </dependency>
-    <!-- Required for email functionality -->
+    <!-- Optional: Required for email functionality (password reset) -->
     <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-mail</artifactId>
@@ -142,20 +104,9 @@ dependencies {
 </dependencies>
 ```
 
-**Without Email (Basic Auth Only):**
-If you don't need password reset emails, you can skip the mail dependency:
+## � Quick Start
 
-```kotlin
-// Gradle - Basic auth without email
-dependencies {
-    implementation("com.control:core-auth-starter:1.0.25")
-    runtimeOnly("org.postgresql:postgresql") // or your preferred database
-}
-```
-
-### 2. Configure Your Application
-
-### 2. Configure Your Application
+### 1. Configure Your Application
 
 Add to your `application.properties`:
 
@@ -166,7 +117,7 @@ spring.datasource.username=your_username
 spring.datasource.password=your_password
 spring.jpa.hibernate.ddl-auto=update
 
-# Admin User (created automatically on startup)
+# Admin User (⚠️ Change password in production!)
 core.auth.admin.enabled=true
 core.auth.admin.username=admin
 core.auth.admin.password=admin123
@@ -174,20 +125,16 @@ core.auth.admin.email=admin@example.com
 
 # UI Configuration
 core.auth.default-success-url=/dashboard
-# Other available options:
-# core.auth.registration-enabled=true
-# core.auth.admin-panel-enabled=true
-# core.auth.forgot-password-enabled=true
 
 # Email Configuration (optional - for password reset)
 core.auth.email.provider=gmail
-core.auth.email.smtp.host=smtp.gmail.com
-core.auth.email.smtp.port=587
-core.auth.email.username=your-email@gmail.com
-core.auth.email.password=your-app-password
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=your-email@gmail.com
+spring.mail.password=your-app-password
 ```
 
-### 3. Enable Component Scanning
+### 2. Enable Component Scanning
 
 Update your main application class:
 
@@ -201,420 +148,109 @@ public class YourApplication {
 }
 ```
 
-### 4. Run Your Application
-
-That's it! Your application now includes:
-- 🔐 Login page at `/login`
-- 📝 User registration at `/signup`
-- 📊 User dashboard at `/dashboard`
-- 👨‍💼 Admin interface at `/admin/users`
-- 🔑 Password reset at `/forgot-password`
-
-## 📚 Available Endpoints
-
-| Endpoint | Description | Access Level | Features |
-|----------|-------------|--------------|----------|
-| `/login` | User login page | Public | Username/email login, remember me |
-| `/signup` | User registration | Public | Validation, duplicate prevention |
-| `/dashboard` | User dashboard | Authenticated | Profile info, last login |
-| `/admin/users` | User management | Admin only | CRUD operations, search, activate/deactivate |
-| `/admin/roles` | **Role management** ⭐ **NEW** | Admin only | Create roles, assign permissions, role deletion |
-| `/admin/permissions` | **Permission management** ⭐ **NEW** | Admin only | Create permissions, manage categories, delete permissions |
-| `/admin/users/{id}/permissions` | **User permissions** ⭐ **NEW** | Admin only | Assign direct permissions, view effective permissions |
-| `/admin/actuator` | System monitoring | Admin only | Spring Boot Actuator dashboard |
-| `/forgot-password` | Password reset request | Public | Email-based token generation |
-| `/reset-password` | Password reset form | Public | Secure token validation |
-| `/logout` | User logout | Authenticated | Session cleanup |
-
-## 🛡️ Role-Based Access Control (RBAC)
-
-The Core Auth Starter now includes a comprehensive RBAC system for fine-grained access control. See the complete [**RBAC Guide**](RBAC_GUIDE.md) for detailed documentation.
-
-### 🚀 Quick RBAC Examples
-
-**Method-Level Security with Permissions:**
-```java
-@RestController
-public class UserController {
-    
-    @PreAuthorize("@authorizationService.hasPermission(authentication, 'USER_CREATE')")
-    @PostMapping("/users")
-    public ResponseEntity<User> createUser(@RequestBody CreateUserRequest request) {
-        // Only users with USER_CREATE permission can access
-    }
-    
-    @RequirePermission("USER_DELETE")
-    @DeleteMapping("/users/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        // Clean annotation-based permission check
-    }
-    
-    @AdminOnly
-    @GetMapping("/admin/reports")
-    public ResponseEntity<List<Report>> getAdminReports() {
-        // Admin-only access
-    }
-}
-```
-
-**Programmatic Permission Checks:**
-```java
-@Service
-public class BusinessService {
-    
-    private final AuthorizationService authorizationService;
-    
-    public void performAction(Authentication auth) {
-        if (authorizationService.hasPermission(auth, "SPECIAL_ACTION")) {
-            // User has permission
-        }
-        
-        if (authorizationService.hasAnyPermission(auth, "PERM_A", "PERM_B")) {
-            // User has at least one permission
-        }
-        
-        if (authorizationService.canAccessAdmin(auth)) {
-            // User can access admin functions
-        }
-    }
-}
-```
-
-### 🎛️ RBAC Admin Interface
-
-Access the new admin interfaces:
-- **`/admin/roles`** - Create and manage roles, assign permissions to roles
-- **`/admin/permissions`** - Create permissions, organize by categories  
-- **`/admin/users/{id}/permissions`** - Assign direct permissions to individual users
-
-### 📊 Default RBAC Setup
-
-The system comes pre-configured with:
-
-**Default Roles:**
-- **ADMIN** - Full system access with all permissions
-- **USER** - Basic access (dashboard, health checks)
-- **MODERATOR** - Intermediate access (user viewing, basic monitoring)
-
-**Permission Categories:**
-- **USER_MANAGEMENT** - User CRUD operations, permission management
-- **ROLE_MANAGEMENT** - Role CRUD operations, permission assignment
-- **SYSTEM_MONITORING** - Actuator endpoints, health checks, metrics
-- **PERMISSION_MANAGEMENT** - Permission CRUD operations
-- **SYSTEM_ADMINISTRATION** - General admin functions, dashboard access
-
-**Migration from Simple Roles:**
-- ✅ **100% Backward Compatible** - Existing role-based code continues to work
-- ✅ **Additive Enhancement** - New permission system works alongside existing roles
-- ✅ **Gradual Migration** - Migrate to permission-based security at your own pace
-
-For complete RBAC documentation, examples, and best practices, see: **[RBAC_GUIDE.md](RBAC_GUIDE.md)**
-
-## 📊 System Monitoring with Spring Boot Actuator
-
-The Core Auth Starter includes a comprehensive System Monitoring dashboard that integrates with Spring Boot Actuator endpoints. The dashboard provides real-time monitoring capabilities for production applications.
-
-### 🔧 Enabling Actuator in Your Application
-
-**Step 1: Add Actuator Dependency**
-
-```kotlin
-// Gradle (build.gradle.kts)
-dependencies {
-    implementation("com.control:core-auth-starter:1.0.14")
-    implementation("org.springframework.boot:spring-boot-starter-actuator") // Add this
-    // ... other dependencies
-}
-```
-
-```xml
-<!-- Maven (pom.xml) -->
-<dependencies>
-    <dependency>
-        <groupId>com.control</groupId>
-        <artifactId>core-auth-starter</artifactId>
-        <version>1.0.14</version>
-    </dependency>
-    <!-- Add Spring Boot Actuator -->
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-actuator</artifactId>
-    </dependency>
-</dependencies>
-```
-
-**Step 2: Configure Actuator Endpoints**
-
-Add to your `application.properties`:
-
-```properties
-# Actuator Configuration
-management.endpoints.web.exposure.include=*
-management.endpoint.health.show-details=when-authorized
-management.endpoint.info.enabled=true
-
-# Application Information (displayed in monitoring dashboard)
-info.app.name=Your Application Name
-info.app.description=Your application description
-info.app.version=1.0.0
-info.app.encoding=@project.build.sourceEncoding@
-info.app.java.version=@java.version@
-
-# Optional: Customize management port (if different from main app port)
-# management.server.port=8081
-```
-
-**Step 3: Access the Monitoring Dashboard**
-
-After adding actuator and restarting your application:
-
-1. **Login as admin** to your application
-2. **Navigate to the dashboard** (`/dashboard`)
-3. **Click "System Monitoring"** card in the admin section
-4. **Access comprehensive monitoring** with real-time data
-
-### 🎛️ Monitoring Dashboard Features
-
-The System Monitoring dashboard (`/admin/actuator`) provides:
-
-| Monitoring Card | Endpoint | Description |
-|----------------|----------|-------------|
-| **Application Health** | `/actuator/health` | Overall application health status and component checks |
-| **Application Info** | `/actuator/info` | Application metadata, version, and build information |
-| **Environment Properties** | `/actuator/env` | Configuration properties and environment variables |
-| **Application Metrics** | `/actuator/metrics` | Performance metrics, JVM stats, and custom metrics |
-| **Configuration Properties** | `/actuator/configprops` | All configuration properties and their values |
-| **Spring Beans** | `/actuator/beans` | All Spring beans and their dependencies |
-| **Request Mappings** | `/actuator/mappings` | All HTTP endpoints and their handlers |
-| **Thread Dump** | `/actuator/threaddump` | JVM thread information for performance analysis |
-| **Log Levels** | `/actuator/loggers` | View and modify logging levels at runtime |
-
-### 🔒 Security Configuration for Actuator
-
-By default, the Core Auth Starter secures actuator endpoints to admin users only. You can customize this:
-
-**Option 1: Admin-Only Access (Default)**
-```java
-// No configuration needed - this is the default behavior
-// Actuator endpoints at /actuator/* require ADMIN role
-```
-
-**Option 2: Custom Actuator Security**
-```java
-@Configuration
-@Order(1) // Higher priority
-public class ActuatorSecurityConfig {
-    
-    @Bean
-    public SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http) throws Exception {
-        return http
-            .securityMatcher("/actuator/**")
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/actuator/health", "/actuator/info").permitAll() // Public
-                .requestMatchers("/actuator/**").hasRole("ADMIN") // Admin only
-            )
-            .httpBasic(Customizer.withDefaults()) // Enable basic auth for monitoring tools
-            .build();
-    }
-}
-```
-
-**Option 3: Monitoring Tool Integration**
-```properties
-# For external monitoring tools (Prometheus, etc.)
-management.endpoints.web.exposure.include=health,info,metrics,prometheus
-management.endpoint.health.show-details=always
-management.endpoint.prometheus.enabled=true
-```
-
-### 📈 Production Monitoring Setup
-
-**Recommended Production Configuration:**
-
-```properties
-# Security: Only expose necessary endpoints
-management.endpoints.web.exposure.include=health,info,metrics,loggers
-
-# Health endpoint configuration
-management.endpoint.health.show-details=when-authorized
-management.endpoint.health.probes.enabled=true
-management.health.diskspace.enabled=true
-management.health.db.enabled=true
-
-# Info endpoint with build information
-management.info.build.enabled=true
-management.info.env.enabled=true
-management.info.git.enabled=true
-
-# Application information
-info.app.name=${spring.application.name:Your App}
-info.app.description=Production application with Core Auth
-info.app.version=@project.version@
-info.app.environment=${spring.profiles.active:production}
-
-# Optional: Separate management port for security
-management.server.port=8081
-management.server.address=127.0.0.1
-
-# Metrics configuration
-management.metrics.distribution.percentiles-histogram.http.server.requests=true
-management.metrics.distribution.percentiles.http.server.requests=0.5,0.95,0.99
-management.metrics.tags.application=${spring.application.name}
-```
-
-### 🚨 Troubleshooting Actuator
-
-**Problem: "Whitelabel Error Page" when clicking System Monitoring**
-
-This means actuator endpoints aren't exposed. Add to your `application.properties`:
-
-```properties
-# Expose actuator endpoints
-management.endpoints.web.exposure.include=*
-```
-
-**Problem: Empty or missing application info**
-
-Add application metadata to your `application.properties`:
-
-```properties
-# Application information for monitoring dashboard
-info.app.name=Your Application Name
-info.app.description=Your application description
-info.app.version=1.0.0
-```
-
-**Problem: Health endpoint shows limited information**
-
-Configure health details visibility:
-
-```properties
-# Show detailed health information for authorized users
-management.endpoint.health.show-details=when-authorized
-# Or for all users (not recommended for production)
-# management.endpoint.health.show-details=always
-```
-
-**Problem: Actuator endpoints return 404**
-
-Ensure you've added the actuator dependency:
-
-```kotlin
-// Gradle
-implementation("org.springframework.boot:spring-boot-starter-actuator")
-```
-
-```xml
-<!-- Maven -->
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-actuator</artifactId>
-</dependency>
-```
-
-### 💡 Advanced Actuator Features
-
-**Custom Health Indicators:**
-```java
-@Component
-public class CustomHealthIndicator implements HealthIndicator {
-    
-    @Override
-    public Health health() {
-        // Custom health check logic
-        boolean isHealthy = checkExternalService();
-        
-        if (isHealthy) {
-            return Health.up()
-                .withDetail("service", "Available")
-                .withDetail("checked-at", Instant.now())
-                .build();
-        } else {
-            return Health.down()
-                .withDetail("service", "Unavailable")
-                .withDetail("error", "Connection timeout")
-                .build();
-        }
-    }
-}
-```
-
-**Custom Application Info:**
-```java
-@Component
-public class CustomInfoContributor implements InfoContributor {
-    
-    @Override
-    public void contribute(Info.Builder builder) {
-        builder.withDetail("app", Map.of(
-            "name", "My Application",
-            "version", "1.0.0",
-            "environment", "production",
-            "startup-time", Instant.now()
-        ));
-    }
-}
-```
-
-**Custom Metrics:**
-```java
-@RestController
-public class MetricsController {
-    
-    private final MeterRegistry meterRegistry;
-    private final Counter customCounter;
-    
-    public MetricsController(MeterRegistry meterRegistry) {
-        this.meterRegistry = meterRegistry;
-        this.customCounter = Counter.builder("custom.requests")
-            .description("Custom request counter")
-            .register(meterRegistry);
-    }
-    
-    @GetMapping("/api/data")
-    public ResponseEntity<String> getData() {
-        customCounter.increment(); // Track custom metric
-        return ResponseEntity.ok("Data response");
-    }
-}
-```
+### 3. Run Your Application
+
+That's it! 🎉 Your application now includes:
+
+| Feature | URL | Access |
+|---------|-----|--------|
+| 🔐 Login | `/login` | Public |
+| 📝 Registration | `/signup` | Public |
+| 📊 Dashboard | `/dashboard` | Authenticated |
+| � User Management | `/admin/users` | Admin |
+| �️ Role Management | `/admin/roles` | Admin |
+| 🔑 Permissions | `/admin/permissions` | Admin |
+| 📊 System Monitoring | `/admin/actuator` | Admin |
+| 🔑 Password Reset | `/forgot-password` | Public |
+
+## 📚 Documentation
+
+| Topic | Description | Link |
+|-------|-------------|------|
+| **RBAC Guide** | Complete guide to roles, permissions, and security annotations | [RBAC_GUIDE.md](RBAC_GUIDE.md) |
+| **User Management** | User lifecycle, permissions, and activity tracking | [USER_MANAGEMENT_README.md](USER_MANAGEMENT_README.md) |
+| **Configuration** | All configuration properties and options | [See below](#-configuration-options) |
+| **Security** | Security best practices and policies | [SECURITY.md](SECURITY.md) |
+| **Changelog** | Version history and release notes | [See below](#-changelog) |
 
 ## ⚙️ Configuration Options
 
-### Admin User Settings
+### Core Settings
 
 ```properties
-# Enable/disable automatic admin user creation
-core.auth.admin.enabled=true
+# Navigation
+core.auth.default-success-url=/dashboard         # Redirect after login
+core.auth.base-url=http://localhost:8080         # Base URL for email links
 
-# Admin credentials (change these!)
-core.auth.admin.username=admin
-core.auth.admin.password=securePassword123
-core.auth.admin.email=admin@yourcompany.com
+# Feature Toggles
+core.auth.registration-enabled=true              # Enable user registration
+core.auth.admin-panel-enabled=true               # Enable admin panel
+core.auth.forgot-password-enabled=true           # Enable password reset
+
+# Admin User
+core.auth.admin.enabled=true                     # Create admin on startup
+core.auth.admin.username=admin                   # Admin username
+core.auth.admin.password=admin123                # ⚠️ CHANGE IN PRODUCTION!
+core.auth.admin.email=admin@example.com          # Admin email
 ```
 
-### UI and Navigation Settings
+### Email Providers
+
+<details>
+<summary><b>Gmail Configuration</b></summary>
 
 ```properties
-# Default page after successful login (default: /dashboard)
-core.auth.default-success-url=/dashboard
-
-# Enable/disable user registration (default: true)
-core.auth.registration-enabled=true
-
-# Enable/disable admin panel access (default: true)
-core.auth.admin-panel-enabled=true
-
-# Enable/disable forgot password functionality (default: true)
-core.auth.forgot-password-enabled=true
-
-# Base URL for email links (used in password reset emails)
-core.auth.base-url=http://localhost:8080
+core.auth.email.provider=gmail
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=your-email@gmail.com
+spring.mail.password=your-app-password  # Use App Password, not regular password
+core.auth.email.from-address=your-email@gmail.com
+core.auth.email.from-name=Your App Name
 ```
+</details>
 
-### Database Support
+<details>
+<summary><b>SendGrid Configuration</b></summary>
 
-Works with any JPA-compatible database:
+```properties
+core.auth.email.provider=sendgrid
+spring.mail.host=smtp.sendgrid.net
+spring.mail.port=587
+spring.mail.username=apikey
+spring.mail.password=your-sendgrid-api-key
+core.auth.email.from-address=noreply@yourcompany.com
+core.auth.email.from-name=Your Company
+```
+</details>
+
+<details>
+<summary><b>MailHog (Development)</b></summary>
+
+```properties
+core.auth.email.provider=mailhog
+spring.mail.host=localhost
+spring.mail.port=1025
+spring.mail.username=
+spring.mail.password=
+```
+</details>
+
+<details>
+<summary><b>Custom SMTP</b></summary>
+
+```properties
+core.auth.email.provider=custom
+spring.mail.host=your-smtp-server.com
+spring.mail.port=587
+spring.mail.username=your-username
+spring.mail.password=your-password
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+```
+</details>
+
+### Database Configuration
 
 ```properties
 # PostgreSQL (recommended for production)
@@ -633,197 +269,155 @@ spring.datasource.username=root
 spring.datasource.password=password
 ```
 
-### 📧 Email Provider Configuration
-
-> **⚠️ Important:** Email functionality requires adding `spring-boot-starter-mail` to your dependencies. See [Quick Setup](#1-add-required-dependencies) for details.
-
-#### Gmail Configuration
-```properties
-core.auth.email.provider=gmail
-core.auth.email.smtp.host=smtp.gmail.com
-core.auth.email.smtp.port=587
-core.auth.email.username=your-email@gmail.com
-core.auth.email.password=your-app-password  # Use App Password, not regular password
-core.auth.email.from-address=your-email@gmail.com
-core.auth.email.from-name=Your App Name
-```
-
-#### SendGrid Configuration
-```properties
-core.auth.email.provider=sendgrid
-core.auth.email.smtp.host=smtp.sendgrid.net
-core.auth.email.smtp.port=587
-core.auth.email.username=apikey
-core.auth.email.password=your-sendgrid-api-key
-core.auth.email.from-address=noreply@yourcompany.com
-core.auth.email.from-name=Your Company
-```
-
-#### MailHog (Development)
-```properties
-core.auth.email.provider=mailhog
-core.auth.email.smtp.host=localhost
-core.auth.email.smtp.port=1025
-core.auth.email.username=
-core.auth.email.password=
-```
-
-#### Custom SMTP
-```properties
-core.auth.email.provider=custom
-core.auth.email.smtp.host=your-smtp-server.com
-core.auth.email.smtp.port=587
-core.auth.email.smtp.auth=true
-core.auth.email.smtp.starttls=true
-core.auth.email.username=your-username
-core.auth.email.password=your-password
-```
-
-## 🗄️ Database Schema
-
-The starter automatically creates these tables:
-
-### Users Table
-```sql
-CREATE TABLE users (
-    id BIGSERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    role VARCHAR(20) DEFAULT 'USER',
-    active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_login TIMESTAMP
-);
-```
-
-### Password Reset Tokens Table
-```sql
-CREATE TABLE password_reset_tokens (
-    id BIGSERIAL PRIMARY KEY,
-    token VARCHAR(255) UNIQUE NOT NULL,
-    user_id BIGINT REFERENCES users(id),
-    expiry_date TIMESTAMP NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-## 📋 Complete Configuration Reference
-
-Below is the complete list of all configuration properties available in the Core Auth Starter:
-
-### 🔧 Core Settings
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `core.auth.default-success-url` | String | `/dashboard` | URL to redirect to after successful login |
-| `core.auth.registration-enabled` | Boolean | `true` | Enable/disable user registration functionality |
-| `core.auth.password-reset-enabled` | Boolean | `true` | Enable/disable password reset functionality |
-| `core.auth.admin-panel-enabled` | Boolean | `true` | Enable/disable admin panel access |
-| `core.auth.forgot-password-enabled` | Boolean | `true` | Enable/disable forgot password feature |
-| `core.auth.base-url` | String | `http://localhost:8080` | Base URL for email links and redirects |
-
-### 👤 Admin User Configuration
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `core.auth.admin.enabled` | Boolean | `true` | Enable automatic admin user creation |
-| `core.auth.admin.username` | String | `admin` | Default admin username |
-| `core.auth.admin.password` | String | `admin123` | Default admin password ⚠️ Change this! |
-| `core.auth.admin.email` | String | `admin@example.com` | Default admin email address |
-
-### 📧 Email Configuration
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `core.auth.email.enabled` | Boolean | `true` | Enable/disable email functionality |
-| `core.auth.email.from-address` | String | `noreply@example.com` | From address for system emails |
-| `core.auth.email.from-name` | String | `Core Auth` | From name for system emails |
-
-### 🔒 Security Configuration
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `core.auth.security.auto-configure` | Boolean | `true` | Enable/disable automatic security configuration |
-
-### 📝 Example Configuration
-
-Here's a complete example configuration for `application.properties`:
+### Spring Boot Actuator (System Monitoring)
 
 ```properties
-# Database Configuration
-spring.datasource.url=jdbc:postgresql://localhost:5432/myapp
-spring.datasource.username=postgres
-spring.datasource.password=password
-spring.jpa.hibernate.ddl-auto=update
+# Enable actuator endpoints
+management.endpoints.web.exposure.include=health,info,metrics,loggers
+management.endpoint.health.show-details=when-authorized
 
-# Core Auth Settings
-core.auth.default-success-url=/home
-core.auth.registration-enabled=true
-core.auth.admin-panel-enabled=true
-core.auth.forgot-password-enabled=true
-core.auth.base-url=https://myapp.com
-
-# Admin User (⚠️ Change these in production!)
-core.auth.admin.enabled=true
-core.auth.admin.username=admin
-core.auth.admin.password=MySecurePassword123!
-core.auth.admin.email=admin@mycompany.com
-
-# Email Settings
-core.auth.email.enabled=true
-core.auth.email.from-address=noreply@mycompany.com
-core.auth.email.from-name=My Application
-
-# Security
-core.auth.security.auto-configure=true
-
-# Spring Mail Configuration (required for email features)
-spring.mail.host=smtp.gmail.com
-spring.mail.port=587
-spring.mail.username=your-email@gmail.com
-spring.mail.password=your-app-password
-spring.mail.properties.mail.smtp.auth=true
-spring.mail.properties.mail.smtp.starttls.enable=true
+# Application info
+info.app.name=Your Application
+info.app.description=Your application description
+info.app.version=1.0.0
 ```
 
-### 🚫 Disabling Features
-
-You can disable specific features by setting them to `false`:
-
-```properties
-# Disable user registration
-core.auth.registration-enabled=false
-
-# Disable admin panel
-core.auth.admin-panel-enabled=false
-
-# Disable password reset
-core.auth.forgot-password-enabled=false
-
-# Disable email functionality
-core.auth.email.enabled=false
-
-# Disable automatic admin user creation
-core.auth.admin.enabled=false
-
-# Disable automatic security configuration
-core.auth.security.auto-configure=false
-```
+> **� Tip:** See [Spring Boot Actuator Documentation](#-system-monitoring-with-spring-boot-actuator) for detailed monitoring setup.
 
 ## 🎨 Customization
 
-### Overriding Templates
+## 🎨 Customization
+
+### Override Templates
 
 Create your own templates in `src/main/resources/templates/`:
-
 - `login.html` - Login page
-- `signup.html` - Registration page  
+- `signup.html` - Registration page
 - `dashboard.html` - User dashboard
 - `user-management.html` - Admin interface
 - `forgot-password.html` - Password reset request
 - `reset-password.html` - Password reset form
-- `email/password-reset.html` - Password reset email template
+- `email/password-reset.html` - Password reset email
+
+### Custom Styling
+
+Override CSS in `src/main/resources/static/css/custom.css`:
+
+```css
+/* Override Material UI variables */
+:root {
+    --primary-color: #your-color;
+    --border-radius: 8px;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+}
+```
+
+### Custom Security
+
+Add your own security rules with a different bean name:
+
+```java
+@Configuration
+@EnableWebSecurity
+public class YourSecurityConfig {
+    
+    @Bean
+    public SecurityFilterChain businessSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/**").authenticated()
+                .requestMatchers("/admin/custom/**").hasRole("ADMIN")
+                .anyRequest().permitAll()
+            )
+            .formLogin(form -> form.defaultSuccessUrl("/"))
+            .build();
+    }
+}
+```
+
+Core Auth handles its own endpoints (`/login`, `/admin/users`, etc.) while your configuration handles business logic.
+
+## 📋 Requirements
+
+- **Java**: 17+
+- **Spring Boot**: 3.0.0+ (3.5.6+ recommended)
+- **Database**: Any JPA-compatible database
+
+### Migration from Spring Boot 2.x
+
+<details>
+<summary><b>Click to expand migration guide</b></summary>
+
+#### 1. Update Dependencies
+
+**Gradle:**
+```kotlin
+plugins {
+    id("org.springframework.boot") version "3.5.6"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+```
+
+**Maven:**
+```xml
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.5.6</version>
+</parent>
+
+<properties>
+    <java.version>17</java.version>
+</properties>
+```
+
+#### 2. Update Imports (javax → jakarta)
+
+```java
+// OLD (Spring Boot 2.x)
+import javax.persistence.*;
+import javax.servlet.*;
+
+// NEW (Spring Boot 3.x)
+import jakarta.persistence.*;
+import jakarta.servlet.*;
+```
+
+#### 3. Update Security Configuration
+
+```java
+// OLD (Spring Boot 2.x)
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.authorizeRequests()...
+    }
+}
+
+// NEW (Spring Boot 3.x)
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http
+            .authorizeHttpRequests(auth -> auth...)
+            .build();
+    }
+}
+```
+
+</details>
 
 ### Custom Styling
 

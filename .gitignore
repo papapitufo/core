@@ -35,3 +35,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Security ###
+cookies.txt
+**/application-local.properties
+**/application-prod.properties
